@@ -739,9 +739,6 @@
 
     update: function (dt) {
       this.lastTime += dt; // in seconds
-      if (this.lastTime < 0.05) {
-        return; // don't update for tiny steps
-      }
       if (this.lastTime > 1) {
         this.lastTime = 1; // cap time lapses to keep physics correct
       }
@@ -750,7 +747,10 @@
       this._super(elapsed);
 
       this.updateGameAreaPosition(elapsed);
-
+/*      if (elapsed < 0.05) {
+        return; // don't update for tiny steps
+      }
+*/
       var _this = this;
       if (typeof this.space.eachBody !== 'undefined') {
         this.space.eachBody(function (body) {
@@ -821,7 +821,7 @@
       // newPos.y = Math.floor(newPos.y);
     },
 
-    updateGameAreaPosition: function (/*dt*/) {
+    updateGameAreaPosition: function (dt) {
       // function sign(x) { return x > 0 ? 1 : x < 0 ? -1 : 0; }
       var padPos = this._getPadPos();
       var gameArea = this._getGameArea();
@@ -829,10 +829,10 @@
         Math.floor(gameArea.getPositionY()));
 
       if (Math.abs(padPos.y) >= 1) {
-        newPos.y -= padPos.y;
+        newPos.y -= 10 * dt * padPos.y;
       }
       if (Math.abs(padPos.x) >= 1) {
-        newPos.x -= padPos.x;
+        newPos.x -= 10 * dt * padPos.x;
       }
 
       this.ensureGameAreaPositionWithinBoundaries(newPos);

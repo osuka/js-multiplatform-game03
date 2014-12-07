@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="40" height="60" tilewidth="64" tileheight="64">
  <tileset firstgid="1" name="tilesheet-1" tilewidth="64" tileheight="64" spacing="4" margin="2">
-  <image source="tilesheet-1_2x-fixed.png" width="816" height="1224"/>
+  <image source="tilesheet-1_2x-fixed.png" width="816" height="1020"/>
  </tileset>
  <layer name="layer0" width="40" height="60">
   <data encoding="base64" compression="zlib">
-   eJztmEuSgzAMRDnNVNaZ+98tlR3lUv8kw7CYhRcELD+12jLkdRzH6+HjZ9PYHXON9XsaT+M7cz2Z76n6uYyMveLr5lrxneNVjOla0/moFlUct+5rDaqR8KV5s/gorzRHp77f8SaaJL6c6Mf42DpdvsSLiK+K1dVvnZNoqXoVi1utm2jmnAVJL0Ws6B7jcGvt8ikNqzVVbR1vJHyO/1z2pG87/mM+c+aqvZTo9yZxd41pfa9kQ/Gr39L+fLeGV/NNPaje1Tpn5hqLnStTvq6eqCeznNkeSXJKdOicM4n/nLXT+6iXpnzOmebmhZiVR1n/q2I5Xldnn/Kpy+fGQX5L3h+Qt93+p/hUH0Lzd/Kl2jgcO/hcNmck3mN8qF8xZpVTsp/U/nB0cX2pPLqDD63pesLZe10+dl15ya2787z7bcm0U+s6vkFauvopzzAtWc7KJ+73OasrY3D17PIhr6u1lE/VnIQPMaLnFMcVfG5dHQ7m8wmfipXsS4e7478qHrrv8Cm/JP25y4T2lOPn7v8HqH6qryjm9bfu93m1PuvRSkOUZ4cP9Q7Wi1m/vJMPcbr7Y8rnslWaKr7q+c7+cD3XyXeNq75/2dyqHyN9Hb4qRvL+csVgNVZ8SieUu+Jgeq/XSX0dD6qaKu71+W590fPTPZbyTUdS87/gm45/vj18ybh73Q9q7YcA
+   eJzt1zESgzAMRFGfhsG17383ClxQgcdIaGV+8VvyWEjGqaWUXbTai3bgw6cYPh9fE7Bl3k+lO5/CM868n3Uzz4P98OHDF+VrlxR9lkX9Pntum/3989p061n4Rq+Vab+R+7XaLzJ8+Gay+r7/db9o31fnmVX3w4cP31nkf6QV9sOHL7PvzVmQ/fDhw4dPsyy+p5pTI599AM/FeQc=
   </data>
  </layer>
  <layer name="layer1" width="40" height="60">
@@ -13,23 +13,23 @@
    eJztmNFuwyAMRVG79XFS97h2/P9nrki1dneHsR0ISaVcKSJRCJzYYAwpHXpF3R7XHcoLPe9Nn1sDGDr4+rQG3+lxnR/X27N872hL48P2S3mh51afH/R87eDL6f+cron/o9XnSD6vRvAVv6MPrDIyLvKzFBt/N+p+KXzMbWmG3bEfL9+Vyh555r/YGvl4zON6JvVn8Yk89sP29sJ3hyun3xhyUy6OMRxvMR7m5J9r0fnhVa1dK94IP3KXeX2jeto49MTkCB/HG3k/I0Z4+FgSL/fCp42/LfjKHJF5YXFsZT+WxWftK6JlD98p2ev0yLwzyhddJ3oV5ZM41/JL8e+oPMvTXyvfqiliv1l5For5ij01G3j+PeIPLDUfMV/veOz93vJRNt5bQr6WL0RLfMTCXEnuPXyz9/Se/rBObU+qlWf4zlpDtDji8f0aNovsWaNtLRWufWyXWo6riX2Rk28eWOeJrbWI+Wb4jHXwtdXTZg8fj1UtnmDsmck3ytZr+XfvfMVv2llq5LwOc0n+hvcIS3MG7b+WxP+rcu/J2fm8RcR7y1r7XvXwoVpjAXMoXkf2wNdTX+OTcYq5ZiuHtPpbGgc1Pm+/0Xot1fJutAme88u4z6mdx4zkwxhVi0Xa/PLmz6eFXDXVWHr5ypjlfYrsIWv7z1bsjvB5ZP2D9Z7nHq4jIuRr7bfX4PMI+UbHs9F8UVlr9dZ8lkbw4RgdndtjbLPOIrZo79Bf/QDNfiFF
   </data>
  </layer>
- <objectgroup draworder="topdown" name="solids" width="40" height="60">
+ <objectgroup name="solids" width="40" height="60">
   <object x="65" y="3780" width="701" height="65"/>
   <object x="1862" y="3771" width="701" height="65"/>
  </objectgroup>
- <objectgroup draworder="topdown" name="generator-defendant" width="40" height="60">
+ <objectgroup name="generator-defendant" width="40" height="60">
   <object name="b" x="265" y="1103" width="26" height="26"/>
   <object name="a" x="476" y="600" width="31" height="26"/>
  </objectgroup>
- <objectgroup draworder="topdown" name="generator-attacker" width="40" height="60" opacity="0.99">
+ <objectgroup name="generator-attacker" width="40" height="60" opacity="0.99">
   <object name="2" x="1995" y="547" width="64" height="29"/>
   <object name="3" x="1982" y="1028" width="34" height="28"/>
   <object name="4" x="1896" y="263" width="29" height="27"/>
  </objectgroup>
- <objectgroup draworder="topdown" name="goal" width="40" height="60">
+ <objectgroup name="goal" width="40" height="60">
   <object x="768" y="3768" width="1086" height="95"/>
  </objectgroup>
- <objectgroup draworder="topdown" name="defendants" width="40" height="60">
+ <objectgroup name="defendants" width="40" height="60">
   <object x="439" y="3130">
    <ellipse/>
   </object>
@@ -91,7 +91,7 @@
    <ellipse/>
   </object>
  </objectgroup>
- <objectgroup draworder="topdown" name="attackers" width="40" height="60">
+ <objectgroup name="attackers" width="40" height="60">
   <object x="501" y="141">
    <ellipse/>
   </object>

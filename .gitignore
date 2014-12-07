@@ -31,9 +31,9 @@ runtime/
 bin/
 gen/
 obj/
-libs/
+frameworks/runtime-src/proj.android/libs/
 # cocos duplicated files
-proj.android/assets
+frameworks/runtime-src/proj.android/assets/
 
 # Local configuration file (sdk path, etc)
 local.properties
