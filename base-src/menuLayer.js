@@ -93,7 +93,7 @@
       for (var i = 0; i < texts.length; i++) {
         var label = cc.LabelBMFont.create(
           texts[i].t,
-          'res/headers-100.fnt',
+          'res/images/headers-100.fnt',
           ScreenDimensions.viewportSize.width,
           cc.TEXT_ALIGNMENT_LEFT,
           cc.p(0, 0)

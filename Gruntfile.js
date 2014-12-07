@@ -5,6 +5,8 @@
 // grunt build      to package javascript code
 // 
 // grunt clean      to clean intermediate files
+// grunt clean:all  to clean all intermediate files
+//                  including android / ios binaries
 // 
 // 
 
@@ -37,7 +39,9 @@ module.exports = function (grunt) {
     clean: {
       dist: [
         '<%= paths.dist %>/bundle-scripts.js',
-        // cocos has a very ugly habit of copying everything into the Android project
+      ],
+      all: [
+        // cocos has an ugly habit of copying everything to the Android project
         '<%= paths.runtimesrc %>/proj.android/assets/**',
         '<%= paths.runtimesrc %>/proj.android/bin/**',
         '<%= paths.runtimesrc %>/proj.android/libs/**',
@@ -116,8 +120,7 @@ module.exports = function (grunt) {
  
   grunt.registerTask('test', [
     'jshint',
-    'clean:server',
-    'connect:test',
+    'clean:dist',
     'mocha'
   ]);
 
