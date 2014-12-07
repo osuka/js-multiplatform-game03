@@ -1,0 +1,8 @@
+//
+// Prefix header for all source files of the 'js-multiplatform-game03' target in the 'js-multiplatform-game03' project
+//
+
+#ifdef __OBJC__
+	#import <Foundation/Foundation.h>
+	#import <UIKit/UIKit.h>
+#endif

@@ -1,0 +1,12 @@
+{
+ "name": "game01",
+ "description": "game01",
+ "launch_path": "/index.html",
+ "developer": {
+   "name": "osuka",
+   "url": "https://github.com/osuka"
+ },
+ "default_locale": "en",
+ "version": "1.0.0",
+ "orientation": "portrait"
+}
