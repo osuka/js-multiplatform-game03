@@ -16,7 +16,7 @@ module.exports = function (grunt) {
 
   grunt.initConfig({
     paths: {
-      res: 'Resources',
+      res: 'res',
       src: 'base-src',
       runtimesrc: 'frameworks/runtime-src',
       dist: 'src',
@@ -75,10 +75,6 @@ module.exports = function (grunt) {
     },
 
     watch: {
-      compass: {
-        files: ['<%= paths.res %>/styles/{,*/}*.{scss,sass}'],
-        tasks: ['compass']
-      },
       js: {
         files: '<%= jshint.all %>',
         tasks: ['jshint', 'browserify']
@@ -103,6 +99,28 @@ module.exports = function (grunt) {
         },
         external: [
           'jsb.js'
+        ]
+      }
+    },
+
+    compress: {
+      main: {
+        options: {
+          archive: 'archived-web-version.zip'
+        },
+        files: [
+          {
+            expand: true,
+            cwd: '.',
+            src: [
+              '<%= paths.dist %>/**',
+              '<%= paths.res %>/**',
+              'frameworks/cocos2d-html5/**',
+              'index.html',
+              'main.js',
+              'project.json',
+            ]
+          }
         ]
       }
     },

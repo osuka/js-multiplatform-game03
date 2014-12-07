@@ -44,3 +44,5 @@ src/bundled-scripts.js
 # linux generated files
 linux-build
 
+# packaged web version
+archived-web-version.zip

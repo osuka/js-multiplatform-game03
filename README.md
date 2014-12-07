@@ -22,6 +22,8 @@ Requirements:
   * Android NDK r9d
   * Android SDK 2.3 or higher (Level 9+)
 
+[Click here to see the web version in action](http://gatillos.com/js-multiplatform-game03/index.html)
+
 # Why use Grunt?
 
 I'm playing around with Cocos2d-x/Cocos2d-js and one of the most
