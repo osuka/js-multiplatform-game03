@@ -1,4 +1,9 @@
-/* globals cc */
+/*
+This class is invoked just after loading the cocos2d boot
+code. It's main task is to define a dpi for devices that
+don't support that operation, and launch the initial
+menu screen.
+*/
 (function () {
   'use strict';
   var GameController = require('./gameController');

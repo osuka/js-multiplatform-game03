@@ -1,10 +1,14 @@
-/* globals cc */
+/*
+Scene object, created by supplying a layer object. The
+layer object must implemented an init() method that
+will be invoked just after creation.
+*/
 (function () {
   'use strict';
 
   var ScreenDimensions = require('./screenDimensions');
 
-  var InitialScene = cc.Scene.extend({
+  var scene = cc.Scene.extend({
     ctor: function (mainLayerClass) {
       this._super();
   
@@ -19,9 +23,6 @@
       } else {
         ScreenDimensions.scale = 1.0;
       }
-      cc.log('Window size: ' + winSize.width + 'x' + winSize.height);
-      cc.log('FPS: ' + cc.director.getAnimationInterval());
-      cc.log('Scale set to: ' + ScreenDimensions.scale);
       cc.director.setDisplayStats(true);
 
       ScreenDimensions.viewportSize = {
@@ -46,5 +47,5 @@
     }
   });
   
-  module.exports = InitialScene;
+  module.exports = scene;
 })();

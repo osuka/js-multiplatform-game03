@@ -1,8 +1,11 @@
-/* globals cc */
+/*
+Simple game controller. In charge of changing the different
+screens (scenes).
+*/
 (function () {
   'use strict';
 
-  var InitialScene = require('./initialScene');
+  var Scene = require('./scene');
   var MenuLayer = require('./menuLayer');
   var ChapterOne = require('./chapterOne');
 
@@ -25,13 +28,13 @@
 
     showMenu: function () {
       this.currentChapter = -1;
-      var newScene = new InitialScene(MenuLayer);
+      var newScene = new Scene(MenuLayer);
       cc.director.runScene(newScene);
     },
 
     showChapter: function (n) {
       this.currentChapter = n;
-      var newScene = new InitialScene(ChapterOne);
+      var newScene = new Scene(ChapterOne);
       cc.director.runScene(newScene);
     },
 

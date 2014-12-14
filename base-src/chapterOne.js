@@ -323,18 +323,25 @@
 
     },
 
-    // If a generator is clicked, returns it's center, undefined otherwise
-    checkGeneratorClicked: function (point) {
+    // Transforms a click/touch into a square in world coordinates
+    // that can be used with cc.rectIntersectsRect
+    pointToWorldRect: function (point) {
       var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
       var worldPoint = {
-        x : point.x - gameArea.getPosition().x,
-        y : point.y - gameArea.getPosition().y
+        x : (point.x - gameArea.getPosition().x) / gameArea.scale,
+        y : (point.y - gameArea.getPosition().y) / gameArea.scale
       };
       var margin = 4; // make it easier to click
       var worldRect = cc.rect(
         worldPoint.x - margin, worldPoint.y - margin,
         margin * 2, margin * 2);
+      return worldRect;
+    },
+
+    // If a generator is clicked, returns it's center, undefined otherwise
+    checkGeneratorClicked: function (point) {
       var tag = 10000; // TODO: need a different tag?
+      var worldRect = this.pointToWorldRect(point);
       for (var i = 0; i < this.attackGenerators.length; i++) {
         var r = this.attackGenerators[i];
         if (cc.rectIntersectsRect(worldRect, r)) {
@@ -346,32 +353,22 @@
           return center;
         }
       }
-      return undefined;
     },
 
     // if a character is clicked
     checkAttackerClicked: function (point) {
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
-      var worldPoint = {
-        x : point.x - gameArea.getPosition().x,
-        y : point.y - gameArea.getPosition().y
-      };
-      var margin = 4; // make it easier to click
-      var worldRect = cc.rect(
-        worldPoint.x - margin, worldPoint.y - margin,
-        margin * 2, margin * 2);
+      var worldRect = this.pointToWorldRect(point);
       for (var i = 0; i < this.attackers.length; i++) {
         var sprite = this.attackers[i];
-        var r = cc.rect(sprite.x,
-          sprite.y,
-          sprite.getTextureRect().width,
-          sprite.getTextureRect().height);
+        var r = cc.rect(sprite.x - sprite.getContentSize().width / 2,
+          sprite.y - sprite.getContentSize().height / 2,
+          sprite.getContentSize().width,
+          sprite.getContentSize().height);
         if (cc.rectIntersectsRect(worldRect, r)) {
           var spriteAction = cc.TintTo.create(2, 0, 0, 240);
           sprite.runAction(spriteAction);
         }
       }
-      return undefined;
     },
 
     createSolids: function (tilemap) {

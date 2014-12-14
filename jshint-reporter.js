@@ -11,7 +11,13 @@ module.exports = {
       return;
     }
     var exec = require('child_process').exec;
-    exec('say "There is a syntax error"');
+    var phrases = [
+      'You are but a fool.', 'Why are you doing this to me.',
+      'Come on you should know better.', 'What are you doing',
+      'There must be more than this to life.'
+    ];
+    var whichOne = Math.floor(Math.random() * phrases.length);
+    exec('say "There is a syntax error. "' + phrases[whichOne]);
     process.stdout.write('\n ************************************\n');
     process.stdout.write('Errors during validation detected:\n');
 

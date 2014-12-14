@@ -26,27 +26,16 @@
 
       this._super();
 
-      // this.setTouchEnabled(true);
-
-      // load shared graphics
-      // good reference: http://www.cocos2d-x.org/forums/19/topics/23698
-      // var spriteBatch = cc.SpriteBatchNode.create("res/sheet1_default.png");
-      // var cache = cc.SpriteFrameCache.getInstance();
-      // cache.addSpriteFrames("res/sheet1_default.plist");
-      // this.addChild(spriteBatch, 0, this.TAG_SPRITEBATCH);
-
       // create physics world
       //
       this.space = new cp.Space();
       this.space.iterations = 5;
       this.space.gravity = cp.v(0, 0); // top view
 
-      // this.setScale(game.scale);
       var layer = cc.Layer.create();
       this.addChild(layer, this.CONTROLS_LAYER_ZORDER, this.TAG_CONTROLS_LAYER);
       layer = cc.Layer.create();
       this.addChild(layer, this.GAMEAREA_LAYER_ZORDER, this.TAG_GAMEAREA_LAYER);
-      // this.createBoundaries();
 
       this.addJoystick();
 
