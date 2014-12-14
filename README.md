@@ -95,11 +95,12 @@ You are almost done!
 You can run the HTML5 version in your computer executing the following:
 
 ```
-grunt build
-cocos run -p web
+grunt server
 ```
 
-This opens a browser to [http://localhost:8000](http://localhost:8000).
+This opens a browser to [http://localhost:8000](http://localhost:9000).
+
+Alternatively, you can use `grunt build` and then `cocos run -p web` to run it via cocos. I prefer to use Grunt because of the livereload feature.
 
 
 # Launching the XCode (iOS) version

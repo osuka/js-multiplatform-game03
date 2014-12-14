@@ -27,15 +27,6 @@ module.exports = function (grunt) {
     properties: grunt.file.isFile('grunt.local.json') ?
                   grunt.file.readJSON('grunt.local.json') : {},
 
-    open: {
-      server: {
-        path: 'http://localhost:<%= connect.options.port %>'
-      },
-      test: {
-        path: 'http://localhost:<%= connect.test.options.port %>'
-      }
-    },
-
     clean: {
       dist: [
         '<%= paths.dist %>/bundle-scripts.js',
@@ -75,6 +66,9 @@ module.exports = function (grunt) {
     },
 
     watch: {
+      options: {
+        livereload: true
+      },
       js: {
         files: '<%= jshint.all %>',
         tasks: ['jshint', 'browserify']
@@ -126,6 +120,20 @@ module.exports = function (grunt) {
     },
 
     shell: {
+    },
+
+    connect: {
+      options: {
+        port: 9000,
+        open: true,
+        livereload: true
+      },
+      server: {
+        base: [
+          '<%= paths.dist %>',
+          '<%= paths.webhome %>'
+        ]
+      }
     }
 
   });
@@ -140,6 +148,12 @@ module.exports = function (grunt) {
     'jshint',
     'clean:dist',
     'mocha'
+  ]);
+
+  grunt.registerTask('server', [
+    'build',
+    'connect:server',
+    'watch'
   ]);
 
 };
