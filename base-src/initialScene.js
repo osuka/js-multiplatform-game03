@@ -14,7 +14,11 @@
   
       var winSize = cc.view.getFrameSize();
       ScreenDimensions.dpi = cc.Device.getDPI();
-      ScreenDimensions.scale = 1.0;
+      if (ScreenDimensions.dpi > 100) {
+        ScreenDimensions.scale = 2.0; // retina et alter
+      } else {
+        ScreenDimensions.scale = 1.0;
+      }
       cc.log('Window size: ' + winSize.width + 'x' + winSize.height);
       cc.log('FPS: ' + cc.director.getAnimationInterval());
       cc.log('Scale set to: ' + ScreenDimensions.scale);

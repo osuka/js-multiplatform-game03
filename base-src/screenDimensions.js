@@ -2,7 +2,7 @@
   'use strict';
 
   var ScreenDimensions = {
-    scale : 1,
+    scale : 2,
     dpi : 0,
     designSize : {
       width : 0,
