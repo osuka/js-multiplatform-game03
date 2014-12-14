@@ -15,52 +15,61 @@
       cc.associateWithNative(this, cc.Layer);
     },
   
-    _walkChildren: function (callback) {
-      var children = this.getChildren();
-      for (var i = children.length - 1; i >= 0; i--) {
-        var child = children[i];
-        if (callback(child) === true) {
-          break;
-        }
-      }
-    },
-
     createTouchListeners: function () {
+
+      var passbackTouchBegan = function (touch, event) {
+        var target = event.getCurrentTarget();
+        var locationInNode = target.convertToNodeSpace(touch.getLocation());
+        var s = target.getContentSize();
+        var rect = cc.rect(0, 0, s.width, s.height);
+        if (cc.rectContainsPoint(rect, locationInNode)) {
+          target.touchedStart(locationInNode);
+          return true;
+        }
+        return false;
+      };
+
+      var passbackTouchMove = function (touch, event) {
+        var target = event.getCurrentTarget();
+        var locationInNode = target.convertToNodeSpace(touch.getLocation());
+        target.touchedMoved(locationInNode);
+      };
+
+      var passbackTouchEnd = function (touch, event) {
+        var target = event.getCurrentTarget();
+        target.touchedEnded();
+      };
+
+      // note: AFAIK you can't share listeners between sprites
       var listenerBase = cc.EventListener.create({
         event: cc.EventListener.TOUCH_ONE_BY_ONE,
         swallowTouches: true,
-        onTouchBegan: function (touch, event) {
-          cc.log('joystick: touch began');
-          var target = event.getCurrentTarget();
-          var locationInNode = target.convertToNodeSpace(touch.getLocation());
-          var s = target.getContentSize();
-          var rect = cc.rect(0, 0, s.width, s.height);
-          if (cc.rectContainsPoint(rect, locationInNode)) {
-            target.touchedStart(locationInNode);
-            return true;
-          }
-          return false;
-        },
-        onTouchMoved: function (touch, event) {
-          cc.log('joystick: touch moved');
-          var target = event.getCurrentTarget();
-          var locationInNode = target.convertToNodeSpace(touch.getLocation());
-          var s = target.getContentSize();
-          var rect = cc.rect(0, 0, s.width, s.height);
-          if (cc.rectContainsPoint(rect, locationInNode)) {
-            target.touchedMoved(locationInNode);
-          }
-          return true;
-        },
-        onTouchEnded: function (touch, event) {
-          cc.log('joystick: touch end');
-          var target = event.getCurrentTarget();
-          target.touchedEnded();
-          return true;
-        }
+        onTouchBegan: passbackTouchBegan,
+        onTouchMoved: passbackTouchMove,
+        onTouchEnded: passbackTouchEnd
       });
       var joystick = this.getChildByTag(this.JOYSTICK_BASE_TAG);
       cc.eventManager.addListener(listenerBase, joystick);
+
+      var fire1Listener = cc.EventListener.create({
+        event: cc.EventListener.TOUCH_ONE_BY_ONE,
+        swallowTouches: true,
+        onTouchBegan: passbackTouchBegan,
+        onTouchMoved: passbackTouchMove,
+        onTouchEnded: passbackTouchEnd
+      });
+      var fire1 = this.getChildByTag(this.JOYSTICK_BUTTON1_TAG);
+      cc.eventManager.addListener(fire1Listener, fire1);
+
+      var fire2Listener = cc.EventListener.create({
+        event: cc.EventListener.TOUCH_ONE_BY_ONE,
+        swallowTouches: true,
+        onTouchBegan: passbackTouchBegan,
+        onTouchMoved: passbackTouchMove,
+        onTouchEnded: passbackTouchEnd
+      });
+      var fire2 = this.getChildByTag(this.JOYSTICK_BUTTON2_TAG);
+      cc.eventManager.addListener(fire2Listener, fire2);
     },
   
     init: function () {
@@ -117,7 +126,7 @@
         joystick.setPosition(cc.p(pos.x, center.y - width));
       }
       if (key.keyCode === 'Z') {
-  
+ 
       }
       if (key.keyCode === 'X') {
   

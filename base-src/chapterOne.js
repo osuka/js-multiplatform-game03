@@ -367,7 +367,7 @@
           sprite.getTextureRect().width,
           sprite.getTextureRect().height);
         if (cc.rectIntersectsRect(worldRect, r)) {
-          var spriteAction = cc.TintTo.create(2, 240, 0, 0);
+          var spriteAction = cc.TintTo.create(2, 0, 0, 240);
           sprite.runAction(spriteAction);
         }
       }
@@ -650,11 +650,11 @@
     },
 
     fire1: function () {
-      // this.toggleDebug();
+      //this.toggleDebug();
       var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
       var newScale = Math.max(gameArea.getScale() / 2, 0.25);
       gameArea.runAction(
-        cc.ScaleTo.create(0.1, newScale)
+        cc.ScaleTo.create(0.5, newScale)
       );
     },
 
@@ -663,7 +663,7 @@
       var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
       var newScale = Math.min(gameArea.getScale() * 2, 2);
       gameArea.runAction(
-        cc.ScaleTo.create(0.1, newScale)
+        cc.ScaleTo.create(0.5, newScale)
       );
     },
 
