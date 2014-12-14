@@ -1,14 +1,53 @@
-/* globals cc */
+/*
+A simple on-screen joystick with two buttons for cocos2d-x/cocos2d-js.
 
+To use, import this module, create an object and add it
+to a layer. It is recommended to use a layer on top
+of the others.
+
+    var Joystick = require('./joystick.js')
+    var joystick = new Joystick();
+    layer.addChild(joystick);
+    joystick.init();
+    joystick.fire1 = function () {
+      // do something
+    };
+    joystick.fire2 = function () {
+      // do something
+    };
+
+Then, in your game loop, invoke:
+
+    var pos = joystick.getPadPosition();
+
+Use pos.x, pos.y to scroll/move your character accordingly.
+
+The joystick is created with a tag JOYSTICK_PAD_TAG,
+and it sits on a base JOYSTICK_BASE_TAG, while the buttons
+are added as JOYSTICK_BUTTON1_TAG, JOYSTICK_BUTTON1_TAG. Use
+this to find the objects in your node hierarchy using findChildByTag.
+
+Mainly for debugging, this class also responds to ARROW KEYS,
+moving the pad with key presses.
+
+The images for the joystick are defined as constants and must be
+available ('res/images/joystick-*.png').
+
+(c) 2014 Oscar Amat
+*/
 (function () {
   'use strict';
 
   var ScreenDimensions = require('./screenDimensions');
+
   var Joystick = cc.Layer.extend({
     JOYSTICK_BASE_TAG: 99999991,
     JOYSTICK_PAD_TAG: 99999992,
     JOYSTICK_BUTTON1_TAG: 99999993,
     JOYSTICK_BUTTON2_TAG: 99999994,
+    IMAGE_BASE: 'res/images/joystick-base.png',
+    IMAGE_PAD: 'res/images/joystick-pad.png',
+    IMAGE_BUTTON: 'res/images/joystick-button.png',
   
     ctor: function () {
       this._super();
@@ -23,7 +62,7 @@
         var s = target.getContentSize();
         var rect = cc.rect(0, 0, s.width, s.height);
         if (cc.rectContainsPoint(rect, locationInNode)) {
-          target.touchedStart(locationInNode);
+          target.touchStart(locationInNode);
           return true;
         }
         return false;
@@ -32,12 +71,12 @@
       var passbackTouchMove = function (touch, event) {
         var target = event.getCurrentTarget();
         var locationInNode = target.convertToNodeSpace(touch.getLocation());
-        target.touchedMoved(locationInNode);
+        target.touchMoved(locationInNode);
       };
 
       var passbackTouchEnd = function (touch, event) {
         var target = event.getCurrentTarget();
-        target.touchedEnded();
+        target.touchEnded();
       };
 
       // note: AFAIK you can't share listeners between sprites
@@ -156,7 +195,7 @@
         joystick.setPosition(cc.p(pos.x, center.y));
       }
       if (key.keyCode === 'Z') {
-  
+
       }
       if (key.keyCode === 'X') {
   
@@ -165,10 +204,10 @@
   
     createBase: function (pos) {
       var _this = this;
-      var joystickBase = cc.Sprite.create('res/images/joystick-base.png');
+      var joystickBase = cc.Sprite.create(this.IMAGE_BASE);
       joystickBase.setPosition(pos);
-      joystickBase.touchedStart =
-      joystickBase.touchedMoved = function (touchPoint) {
+      joystickBase.touchStart =
+      joystickBase.touchMoved = function (touchPoint) {
         var joystick = _this.getChildByTag(_this.JOYSTICK_PAD_TAG);
         if (joystick) {
           joystick.stopAllActions();
@@ -180,7 +219,7 @@
         return false;
       };
   
-      joystickBase.touchedEnded = function () {
+      joystickBase.touchEnded = function () {
         var joystickBase = _this.getChildByTag(_this.JOYSTICK_BASE_TAG);
         var joystick = _this.getChildByTag(_this.JOYSTICK_PAD_TAG);
         if (!joystickBase || !joystick) {
@@ -188,10 +227,6 @@
         }
         joystick.stopAllActions();
         var center = joystickBase.getPosition();
-        // var currentPos = joystick.getPosition();
-        // var xd = currentPos.x - center.x;
-        // var yd = currentPos.y - center.y;
-        // var distance = Math.sqrt(xd * xd + yd * yd);
         joystick.runAction(cc.MoveTo.create(0.10, center));
         return true; // consume event
       };
@@ -199,7 +234,7 @@
     },
   
     createPad: function (pos) {
-      var joystick = cc.Sprite.create('res/images/joystick-pad.png');
+      var joystick = cc.Sprite.create(this.IMAGE_PAD);
       joystick.setPosition(pos);
       this.addChild(joystick, 110 /* zorder */, this.JOYSTICK_PAD_TAG);
     },
@@ -208,30 +243,30 @@
   
       var _this = this;
   
-      var joystickButton1 = cc.Sprite.create('res/images/joystick-button.png');
+      var joystickButton1 = cc.Sprite.create(this.IMAGE_BUTTON);
       joystickButton1.setPosition(cc.p(
         ScreenDimensions.viewportSize.width - pos.x * 1.6, pos.y));
-      joystickButton1.touchedStart = function (touchPoint) {
+      joystickButton1.touchStart = function (touchPoint) {
         joystickButton1.runAction(
           cc.ScaleTo.create(0.15, 0.8, 0.8));
         _this.fire1(touchPoint);
         return true; // consume event
       };
-      joystickButton1.touchedEnded = function () {
+      joystickButton1.touchEnded = function () {
         joystickButton1.runAction(
           cc.ScaleTo.create(0.15, 1, 1));
       };
   
-      var joystickButton2 = cc.Sprite.create('res/images/joystick-button.png');
+      var joystickButton2 = cc.Sprite.create(this.IMAGE_BUTTON);
       joystickButton2.setPosition(
         cc.p(ScreenDimensions.viewportSize.width - pos.x / 2, pos.y));
-      joystickButton2.touchedStart = function (touchPoint) {
+      joystickButton2.touchStart = function (touchPoint) {
         joystickButton2.runAction(
           cc.ScaleTo.create(0.15, 0.8, 0.8));
         _this.fire2(touchPoint);
         return true; // consume event
       };
-      joystickButton2.touchedEnded = function () {
+      joystickButton2.touchEnded = function () {
         joystickButton2.runAction(
           cc.ScaleTo.create(0.15, 1, 1));
       };

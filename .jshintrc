@@ -33,7 +33,8 @@
     "after",
     "afterEach",
     "sinon",
-    "expect"
+    "expect",
+    "cc"
   ],
   "white": true
 }

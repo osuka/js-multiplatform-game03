@@ -7,27 +7,33 @@
 
 'use strict';
 (function () {
+
   var resources = [
-    //image
+    // image
     'res/images/headers-100.png',
     'res/maps/tilesheet-1_2x-fixed.png',
     'res/sprites/spritesheet1_1x.png',
     'res/sprites/spritesheet1_2x.png',
     'res/images/1x1-pixel.png',
 
-    //plist
+    // joystick images
+    'res/images/joystick-base.png',
+    'res/images/joystick-pad.png',
+    'res/images/joystick-button.png',
+
+    // plist
     'res/sprites/spritesheet1_1x.plist',
     'res/sprites/spritesheet1_2x.plist',
 
-    //fnt
+    // fnt
     'res/images/headers-100.fnt',
 
-    //tmx
+    // tmx
     'res/maps/scene00.tmx'
 
-    //bgm
+    // bgm
 
-    //effect
+    // effect
   ];
   module.exports = resources;
 })();
