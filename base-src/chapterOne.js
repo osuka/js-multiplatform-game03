@@ -10,6 +10,7 @@
   var ChapterOne = BaseLayer.extend({
 
     TAG_GOAL :   29999995,
+    TAG_ANIMACTION : 100000000, // for action
     TAG_TOUCHES : 39999980,
 
     init: function () {
@@ -132,8 +133,8 @@
           } else {
             width = count;
           }
-          cc.log('Found segment: ' + count + 'blocks at ' + p.x + ',' + p.y +
-            ((width >= height) ? 'horiz' : 'vert'));
+          //cc.log('Found segment: ' + count + 'blocks at ' + p.x + ',' + p.y +
+          //  ((width >= height) ? 'horiz' : 'vert'));
           addRectangle(
             p.x * tilemap.getTileSize().width,
             (size.height - p.y) * tilemap.getTileSize().height,
@@ -213,7 +214,7 @@
     // warning of objects that are actually polygons
     ccRectForObject: function (tmxObject, scale) {
       if (tmxObject.polygonPoints && tmxObject.polygonPoints.length) {
-        cc.log('Warning: ccRectForObject called with polygon');
+        //cc.log('Warning: ccRectForObject called with polygon');
         return undefined;
       } else {
         return cc.rect(
@@ -229,7 +230,7 @@
     // warning of objects that are actually polygons
     ccPosForObject: function (tmxObject, scale) {
       if (tmxObject.polygonPoints && tmxObject.polygonPoints.length) {
-        cc.log('Warning: ccRectForObject called with polygon');
+        //cc.log('Warning: ccRectForObject called with polygon');
         return undefined;
       } else {
         return cc.p(
@@ -280,8 +281,9 @@
       var tag = 11000;
       for (var i = 0; i < attackers.length; i++) {
         var pos = this.ccPosForObject(attackers[i], scale);
-        this.createSampleChar('persona',
+        var sprite = this.createSampleChar('persona',
           pos, tag + 1, 1 /* zoom */);
+        this.attackers.push(sprite);
       }
     },
 
@@ -295,8 +297,9 @@
       var tag = 12000;
       for (var i = 0; i < attackers.length; i++) {
         var pos = this.ccPosForObject(attackers[i], scale);
-        this.createSampleChar('defendant',
+        var sprite = this.createSampleChar('defendant',
           pos, tag + 1, 1 /* no zoom */);
+        this.defendants.push(sprite);
       }
     },
 
@@ -341,6 +344,31 @@
           this.createSampleChar('persona',
             center, tag, 1 /* zoom */);
           return center;
+        }
+      }
+      return undefined;
+    },
+
+    // if a character is clicked
+    checkAttackerClicked: function (point) {
+      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
+      var worldPoint = {
+        x : point.x - gameArea.getPosition().x,
+        y : point.y - gameArea.getPosition().y
+      };
+      var margin = 4; // make it easier to click
+      var worldRect = cc.rect(
+        worldPoint.x - margin, worldPoint.y - margin,
+        margin * 2, margin * 2);
+      for (var i = 0; i < this.attackers.length; i++) {
+        var sprite = this.attackers[i];
+        var r = cc.rect(sprite.x,
+          sprite.y,
+          sprite.getTextureRect().width,
+          sprite.getTextureRect().height);
+        if (cc.rectIntersectsRect(worldRect, r)) {
+          var spriteAction = cc.TintTo.create(2, 240, 0, 0);
+          sprite.runAction(spriteAction);
         }
       }
       return undefined;
@@ -402,12 +430,13 @@
 
       if (sprite.state !== state) {
         sprite.state = state;
-        sprite.stopAllActions();
-        sprite.runAction(
-          cc.RepeatForever.create(
+        sprite.stopActionByTag(this.TAG_ANIMACTION);
+        var animAction = cc.RepeatForever.create(
             cc.Animate.create(
               animations.getAnimation(sprite.character + sprite.state)
-        )));
+        ));
+        animAction.setTag(this.TAG_ANIMACTION);
+        sprite.runAction(animAction);
       }
     },
 
@@ -490,11 +519,17 @@
         person.applyAI = this.walkToGoalAI.bind(this);
       }
 
-      cc.log('Character created with zoom ' + zoom);
+      //cc.log('Character created with zoom ' + zoom);
       person.setScale(zoom);
+
+      return person;
     },
 
     characters : {},
+
+    attackers: [],
+
+    defendants: [],
 
     _createPeopleDefinitions: function () {
       this.characters.persona = {
@@ -566,7 +601,7 @@
 
       // Character definitions
 
-      cc.log('Define characters');
+      //cc.log('Define characters');
       this._createPeopleDefinitions();
       this._createDefendantDefinitions();
 
@@ -582,7 +617,7 @@
             var fileName = frames[f].file + '.png';
             var frame = cache.getSpriteFrame(fileName);
             if (!frame) {
-              cc.log(fileName + ' not found');
+              //cc.log(fileName + ' not found');
               continue;
             } else {
               animation.addSpriteFrame(frame);
@@ -633,8 +668,8 @@
     },
 
     findFingerObject: function (touch) {
-      var id = touch.getId();
-      cc.log('touch id=' + id);
+      var id = touch.getID();
+      //cc.log('touch id=' + id);
       var gameArea = this._getGameArea();
       var sprite = gameArea.getChildByTag(this.TAG_TOUCHES + id);
       if (!sprite) {
@@ -646,7 +681,7 @@
         sprite.setAnchorPoint(cp.v(0.5, 0.5));
         sprite.setRotation(45);
         gameArea.addChild(sprite, 10000, this.TAG_TOUCHES + id);
-        cc.log('new touch');
+        //cc.log('new touch');
       }
       return sprite;
     },
@@ -705,7 +740,7 @@
         event: cc.EventListener.TOUCH_ONE_BY_ONE,
         swallowTouches: true,
         onTouchBegan: function (touch, event) {
-          cc.log('chapterOne: touch began');
+          //cc.log('chapterOne: touch began');
           var target = event.getCurrentTarget();
           var locationInNode =
             target.convertToNodeSpace(touch.getLocation());
@@ -719,18 +754,19 @@
         },
 
         onTouchMoved: function (touch, event) {
-          cc.log('chapterOne: touch moved');
+          //cc.log('chapterOne: touch moved');
           var target = event.getCurrentTarget();
           target.feedbackFingerMoved(touch);
           return true;
         },
 
         onTouchEnded: function (touch, event) {
-          cc.log('chapterOne: touch ended');
+          //cc.log('chapterOne: touch ended');
           var target = event.getCurrentTarget();
           var point = target.convertTouchToNodeSpace(touch);
           target.feedbackFingerStop(touch);
           target.checkGeneratorClicked(point);
+          target.checkAttackerClicked(point);
           return true;
         }
       });
