@@ -21,8 +21,6 @@ screens (scenes).
       // // Note: this doesn't seem to work for Mac or Android
       // director.setAnimationInterval(1.0 / 60);
 
-      // show initial chapter
-      cc.log('About to display menu');
       this.showMenu();
     },
 

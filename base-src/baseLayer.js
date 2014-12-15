@@ -7,13 +7,20 @@
 
   var BaseLayer = cc.Layer.extend({
 
+    // object tags, unique
     DEBUG_OBJECT_TAG: 99999990,
     TAG_SPRITEBATCH: 99999995,
     TAG_CONTROLS_LAYER: 99999996,
     TAG_GAMEAREA_LAYER: 99999997,
     TAG_JOYSTICK: 99999998,
     TAG_TILEMAP: 99999999,
+    TAG_GOAL :   29999995,
 
+    // action tags, can be used more
+    // than once
+    TAG_ANIMACTION : 100000000, // = sprite image change animation of character
+
+    // depth position on screen
     CONTROLS_LAYER_ZORDER: 10000000,
     GAMEAREA_LAYER_ZORDER: 0,
 

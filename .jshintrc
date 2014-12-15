@@ -19,7 +19,7 @@
   "trailing": true,
   "smarttabs": false,
   "maxlen": 80,
-  "maxstatements": 20,
+  "maxstatements": 30,
   "maxcomplexity": 9,
   "maxdepth": 2,
   "predef": [
@@ -34,7 +34,8 @@
     "afterEach",
     "sinon",
     "expect",
-    "cc"
+    "cc",
+    "cp"
   ],
   "white": true
 }

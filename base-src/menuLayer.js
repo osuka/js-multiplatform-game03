@@ -37,7 +37,6 @@
         event: cc.EventListener.TOUCH_ONE_BY_ONE,
         swallowTouches: true,
         onTouchBegan: function (touch, event) {
-          cc.log('menuLayer: touch start');
           var target = event.getCurrentTarget();
           var locationInNode =
             target.convertToNodeSpace(touch.getLocation());
@@ -50,7 +49,6 @@
         },
         onTouchMoved: function () {},
         onTouchEnded: function (touch, event) {
-          cc.log('menuLayer: touch ended');
           var target = event.getCurrentTarget();
           target.touchEnded();
           return true;
@@ -65,18 +63,14 @@
       var texts = [
         { t : 'Start',
           callback : function () {
-            cc.log('GameController: ');
-            cc.log(GameController);
             GameController.showChapter(0);
           }},
         { t : 'Resume',
-          callback : function () {
-            cc.log('Resume');
-          }},
+          callback : function () {}
+        },
         { t : 'About',
-          callback : function () {
-            cc.log('About');
-          }}
+          callback : function () {}
+        }
       ];
       var actualWidth = ScreenDimensions.viewportSize.width;
       var actualHeight = ScreenDimensions.viewportSize.height;

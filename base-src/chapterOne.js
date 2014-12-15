@@ -6,11 +6,11 @@
   var PhysicsSpriteHelper = require('./physicsSprite');
   var BaseLayer = require('./baseLayer');
   var ScreenDimensions = require('./screenDimensions');
+  var SlowWalkerAI = require('./slowWalkerAI');
+  var WalkToGoalAI = require('./walkToGoalAI');
 
   var ChapterOne = BaseLayer.extend({
 
-    TAG_GOAL :   29999995,
-    TAG_ANIMACTION : 100000000, // for action
     TAG_TOUCHES : 39999980,
 
     init: function () {
@@ -133,8 +133,6 @@
           } else {
             width = count;
           }
-          //cc.log('Found segment: ' + count + 'blocks at ' + p.x + ',' + p.y +
-          //  ((width >= height) ? 'horiz' : 'vert'));
           addRectangle(
             p.x * tilemap.getTileSize().width,
             (size.height - p.y) * tilemap.getTileSize().height,
@@ -214,7 +212,6 @@
     // warning of objects that are actually polygons
     ccRectForObject: function (tmxObject, scale) {
       if (tmxObject.polygonPoints && tmxObject.polygonPoints.length) {
-        //cc.log('Warning: ccRectForObject called with polygon');
         return undefined;
       } else {
         return cc.rect(
@@ -230,7 +227,6 @@
     // warning of objects that are actually polygons
     ccPosForObject: function (tmxObject, scale) {
       if (tmxObject.polygonPoints && tmxObject.polygonPoints.length) {
-        //cc.log('Warning: ccRectForObject called with polygon');
         return undefined;
       } else {
         return cc.p(
@@ -284,6 +280,8 @@
         var sprite = this.createSampleChar('persona',
           pos, tag + 1, 1 /* zoom */);
         this.attackers.push(sprite);
+        sprite.ai = new SlowWalkerAI();
+        sprite.ai.init();
       }
     },
 
@@ -300,6 +298,8 @@
         var sprite = this.createSampleChar('defendant',
           pos, tag + 1, 1 /* no zoom */);
         this.defendants.push(sprite);
+        sprite.ai = new WalkToGoalAI();
+        sprite.ai.init(this._getGameArea().getChildByTag(this.TAG_GOAL));
       }
     },
 
@@ -367,6 +367,8 @@
         if (cc.rectIntersectsRect(worldRect, r)) {
           var spriteAction = cc.TintTo.create(2, 0, 0, 240);
           sprite.runAction(spriteAction);
+          sprite.ai = new SlowWalkerAI();
+          sprite.ai.init();
         }
       }
     },
@@ -437,53 +439,6 @@
       }
     },
 
-    randomWalkingAI: function (dt, sprite, body) {
-      body.setAngle(0);
-      this.setSpriteStateBasedOnVelocity(sprite, body);
-
-      if (Math.random() < 0.05) {
-        if (Math.random() < 0.2) {
-          body.setVel(cp.v(0, 0));
-        } else {
-          body.setVel(cp.v(2000 * dt * (Math.random() * 2 - 1),
-                           2000 * dt * (Math.random() * 2 - 1)));
-          body.setAngVel(0);
-        }
-      }
-    },
-
-    // tries to walk to goal
-    walkToGoalAI: function (dt, sprite, body) {
-
-      if (Math.random() < 0.3) {
-        return this.randomWalkingAI(dt, sprite, body);
-      }
-
-      body.setAngle(0);
-      body.setAngVel(0);
-      this.setSpriteStateBasedOnVelocity(sprite, body);
-
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
-      var goal = gameArea.getChildByTag(this.TAG_GOAL);
-      var p = cc.p(
-        goal.getPosition().x + goal.getBoundingBox().width / 2,
-        goal.getPosition().y + goal.getBoundingBox().height / 2
-      );
-
-      var currentPos = body.getPos();
-      var incX = currentPos.x < p.x ? 1 :
-                  (currentPos.x > p.x ? -1 : 0);
-      var incY = currentPos.y < p.y ? 1 :
-                  (currentPos.y > p.y ? -1 : 0);
-      if (Math.random() < 0.05) {
-        if (Math.random() < 0.2) {
-          body.setVel(cp.v(0, 0));
-        } else {
-          body.setVel(cp.v(2000 * dt * incX, 2000 * dt * incY));
-        }
-      }
-    },
-
     createSampleChar: function (character, pos, tag, zoom) {
       var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
       var spriteBatch = gameArea.getChildByTag(this.TAG_SPRITEBATCH);
@@ -504,19 +459,13 @@
       person.character = character;
       person.state = orientation;
 
-      person.runAction(
-        cc.RepeatForever.create(
-          cc.Animate.create(
-            cc.animationCache.getAnimation(character + orientation)
-      )));
-
-      if (Math.random() < 0.15) {
-        person.applyAI = this.randomWalkingAI.bind(this);
-      } else {
-        person.applyAI = this.walkToGoalAI.bind(this);
-      }
-
-      //cc.log('Character created with zoom ' + zoom);
+      var animAction = cc.RepeatForever.create(
+        cc.Animate.create(
+          cc.animationCache.getAnimation(character + orientation)
+      ));
+      animAction.setTag(BaseLayer.TAG_ANIMACTION);
+      person.runAction(animAction);
+ 
       person.setScale(zoom);
 
       return person;
@@ -576,7 +525,7 @@
         down : [
           { file : 'defendant-down-1' },
           { file : 'defendant-down-2' },
-          { file : 'defendant-down-3' },
+          { file : 'defendant-down-1' },
           { file : 'defendant-down-4' },
         ],
         left : [
@@ -598,7 +547,6 @@
 
       // Character definitions
 
-      //cc.log('Define characters');
       this._createPeopleDefinitions();
       this._createDefendantDefinitions();
 
@@ -614,7 +562,6 @@
             var fileName = frames[f].file + '.png';
             var frame = cache.getSpriteFrame(fileName);
             if (!frame) {
-              //cc.log(fileName + ' not found');
               continue;
             } else {
               animation.addSpriteFrame(frame);
@@ -666,7 +613,6 @@
 
     findFingerObject: function (touch) {
       var id = touch.getID();
-      //cc.log('touch id=' + id);
       var gameArea = this._getGameArea();
       var sprite = gameArea.getChildByTag(this.TAG_TOUCHES + id);
       if (!sprite) {
@@ -678,7 +624,6 @@
         sprite.setAnchorPoint(cp.v(0.5, 0.5));
         sprite.setRotation(45);
         gameArea.addChild(sprite, 10000, this.TAG_TOUCHES + id);
-        //cc.log('new touch');
       }
       return sprite;
     },
@@ -737,7 +682,6 @@
         event: cc.EventListener.TOUCH_ONE_BY_ONE,
         swallowTouches: true,
         onTouchBegan: function (touch, event) {
-          //cc.log('chapterOne: touch began');
           var target = event.getCurrentTarget();
           var locationInNode =
             target.convertToNodeSpace(touch.getLocation());
@@ -751,14 +695,12 @@
         },
 
         onTouchMoved: function (touch, event) {
-          //cc.log('chapterOne: touch moved');
           var target = event.getCurrentTarget();
           target.feedbackFingerMoved(touch);
           return true;
         },
 
         onTouchEnded: function (touch, event) {
-          //cc.log('chapterOne: touch ended');
           var target = event.getCurrentTarget();
           var point = target.convertTouchToNodeSpace(touch);
           target.feedbackFingerStop(touch);
@@ -793,8 +735,8 @@
         var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
         var spriteBatchNode = gameArea.getChildByTag(this.TAG_SPRITEBATCH);
         spriteBatchNode.getChildren().forEach(function (child) {
-          if (typeof child.applyAI !== 'undefined') {
-            child.applyAI(elapsed, child, child.getBody());
+          if (typeof child.ai === 'object') {
+            child.ai.update(elapsed, child, child.getBody());
           }
         });
       }
@@ -803,8 +745,8 @@
     applyAIToBody: function (dt, body) {
       if (body && body.userData) {
         var sprite = body.userData;
-        if (typeof sprite.applyAI !== 'undefined') {
-          sprite.applyAI(dt, sprite, body);
+        if (typeof sprite.ai === 'object') {
+          sprite.ai.update(dt, sprite, body);
         }
       }
     },
