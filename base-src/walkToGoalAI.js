@@ -1,8 +1,6 @@
 (function () {
   'use strict';
   
-  var BaseLayer = require('./baseLayer');
-
   var WalkToGoalAI = function () {
 
     WalkToGoalAI.prototype.init = function (goal) {
@@ -54,13 +52,14 @@
       var state = this._animations[dir];
       if (sprite.state !== state) {
         sprite.state = state;
-        sprite.stopActionByTag(BaseLayer.TAG_ANIMACTION);
-        var animAction = cc.RepeatForever.create(
+        if (sprite.animAction) {
+          sprite.stopAction(sprite.animAction);
+        }
+        sprite.animAction = cc.RepeatForever.create(
             cc.Animate.create(
               animations.getAnimation(sprite.character + sprite.state)
-        ), BaseLayer.TAG_ANIMACTION);
-        animAction.setTag(BaseLayer.TAG_ANIMACTION);
-        sprite.runAction(animAction);
+        ));
+        sprite.runAction(sprite.animAction);
       }
     };
 
@@ -96,8 +95,10 @@
       this.timeFromLastDirectionChangeMs += dt;
 
       // every 3s, reconsider direction
-      if (this.timeFromLastDirectionChangeMs > 3) {
+      if (this.timeFromLastDirectionChangeMs > 3 + 3 * Math.random()) {
         if (Math.random() < 0.5) {
+          body.resetForces();
+          body.setVel(cp.v(0, 0));
           this.changeDirection(sprite);
         }
         this.timeFromLastDirectionChangeMs = 0;
@@ -105,8 +106,13 @@
 
       body.setAngle(0);
       body.setAngVel(0);
-      body.setVel(cp.v(this.direction.x * dt * this.speed,
-                       this.direction.y * dt * this.speed));
+      if (this.direction.x === 0 && this.direction.y === 0) {
+        body.resetForces();
+        body.setVel(cp.v(0, 0));
+      } else {
+        body.applyForce(cp.v(this.direction.x * dt * this.speed,
+                         this.direction.y * dt * this.speed), cp.v(0.5, 0.5));
+      }
       this.setAnimation(sprite);
       
     };

@@ -102,7 +102,7 @@
           cp.v(scale * x, scale * y - h * scale)
         );
         space.addStaticShape(shape);
-        shape.setElasticity(1);
+        shape.setElasticity(0);
         shape.setFriction(1);
       };
 
@@ -384,7 +384,7 @@
       for (var i = 0; i < objects.length; i++) {
         var shape = this.shapeForObject(objects[i], scale);
         this.space.addStaticShape(shape);
-        shape.setElasticity(1);
+        shape.setElasticity(0);
         shape.setFriction(1);
       }
     },
@@ -429,13 +429,14 @@
 
       if (sprite.state !== state) {
         sprite.state = state;
-        sprite.stopActionByTag(this.TAG_ANIMACTION);
-        var animAction = cc.RepeatForever.create(
+        if (sprite.animAction) {
+          sprite.stopAction(sprite.animAction);
+        }
+        sprite.animAction = cc.RepeatForever.create(
             cc.Animate.create(
               animations.getAnimation(sprite.character + sprite.state)
         ));
-        animAction.setTag(this.TAG_ANIMACTION);
-        sprite.runAction(animAction);
+        sprite.runAction(sprite.animAction);
       }
     },
 
@@ -459,12 +460,11 @@
       person.character = character;
       person.state = orientation;
 
-      var animAction = cc.RepeatForever.create(
+      person.animAction = cc.RepeatForever.create(
         cc.Animate.create(
           cc.animationCache.getAnimation(character + orientation)
       ));
-      animAction.setTag(BaseLayer.TAG_ANIMACTION);
-      person.runAction(animAction);
+      person.runAction(person.animAction);
  
       person.setScale(zoom);
 

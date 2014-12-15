@@ -58,6 +58,9 @@ available ('res/images/joystick-*.png').
 
       var passbackTouchBegan = function (touch, event) {
         var target = event.getCurrentTarget();
+        if (!target.touchStart) {
+          return;
+        }
         var locationInNode = target.convertToNodeSpace(touch.getLocation());
         var s = target.getContentSize();
         var rect = cc.rect(0, 0, s.width, s.height);
@@ -70,12 +73,18 @@ available ('res/images/joystick-*.png').
 
       var passbackTouchMove = function (touch, event) {
         var target = event.getCurrentTarget();
+        if (!target.touchMoved) {
+          return;
+        }
         var locationInNode = target.convertToNodeSpace(touch.getLocation());
         target.touchMoved(locationInNode);
       };
 
       var passbackTouchEnd = function (touch, event) {
         var target = event.getCurrentTarget();
+        if (!target.touchEnded) {
+          return;
+        }
         target.touchEnded();
       };
 
