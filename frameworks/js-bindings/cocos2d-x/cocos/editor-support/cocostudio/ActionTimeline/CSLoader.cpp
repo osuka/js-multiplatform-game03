@@ -30,7 +30,7 @@
 #include "cocostudio/CocoStudio.h"
 
 #include "cocostudio/CSParseBinary.pb.h"
-#include "tinyxml2/tinyxml2.h"
+#include "tinyxml2.h"
 
 #include <fstream>
 
@@ -946,6 +946,8 @@ void CSLoader::setPropsForNodeFromProtocolBuffers(cocos2d::Node *node,
     int tag             = options.tag();
     int actionTag       = options.actiontag();
     bool visible        = options.visible();
+    float w             = options.width();
+    float h             = options.height();
     
     node->setName(name);
     
@@ -967,6 +969,8 @@ void CSLoader::setPropsForNodeFromProtocolBuffers(cocos2d::Node *node,
         node->setLocalZOrder(zorder);
     if(visible != true)
         node->setVisible(visible);
+    if (w != 0 || h != 0)
+        node->setContentSize(Size(w, h));
     
     node->setTag(tag);
     node->setUserObject(ActionTimelineData::create(actionTag));
@@ -1241,11 +1245,15 @@ Node* CSLoader::nodeFromXMLFile(const std::string &fileName)
     // xml read
     std::string fullpath = FileUtils::getInstance()->fullPathForFilename(fileName).c_str();
     ssize_t size;
-    std::string content =(char*)FileUtils::getInstance()->getFileData(fullpath, "r", &size);
+    
+    //fix memory leak for v3.3
+    unsigned char* pByte = FileUtils::getInstance()->getFileData(fullpath, "r", &size);
     
     // xml parse
     tinyxml2::XMLDocument* document = new tinyxml2::XMLDocument();
-    document->Parse(content.c_str());
+    document->Parse((const char*)pByte);
+    
+    free(pByte);
     
     const tinyxml2::XMLElement* rootElement = document->RootElement();// Root
     CCLOG("rootElement name = %s", rootElement->Name());

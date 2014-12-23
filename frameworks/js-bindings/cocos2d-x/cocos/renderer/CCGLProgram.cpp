@@ -45,13 +45,6 @@ THE SOFTWARE.
 
 NS_CC_BEGIN
 
-typedef struct _hashUniformEntry
-{
-    GLvoid*         value;       // value
-    unsigned int    location;    // Key
-    UT_hash_handle  hh;          // hash entry
-} tHashUniformEntry;
-
 const char* GLProgram::SHADER_NAME_POSITION_TEXTURE_COLOR = "ShaderPositionTextureColor";
 const char* GLProgram::SHADER_NAME_POSITION_TEXTURE_COLOR_NO_MVP = "ShaderPositionTextureColor_noMVP";
 const char* GLProgram::SHADER_NAME_POSITION_TEXTURE_ALPHA_TEST = "ShaderPositionTextureColorAlphaTest";
@@ -136,7 +129,6 @@ GLProgram::GLProgram()
 : _program(0)
 , _vertShader(0)
 , _fragShader(0)
-, _hashForUniforms(nullptr)
 , _flags()
 {
     memset(_builtInUniforms, 0, sizeof(_builtInUniforms));
@@ -163,15 +155,11 @@ GLProgram::~GLProgram()
         GL::deleteProgram(_program);
     }
 
-    tHashUniformEntry *current_element, *tmp;
-
-    // Purge uniform hash
-    HASH_ITER(hh, _hashForUniforms, current_element, tmp)
+    for (auto e : _hashForUniforms)
     {
-        HASH_DEL(_hashForUniforms, current_element);
-        free(current_element->value);
-        free(current_element);
+        free(e.second);
     }
+    _hashForUniforms.clear();
 }
 
 bool GLProgram::initWithByteArrays(const GLchar* vShaderByteArray, const GLchar* fShaderByteArray)
@@ -222,7 +210,8 @@ bool GLProgram::initWithByteArrays(const GLchar* vShaderByteArray, const GLchar*
     {
         glAttachShader(_program, _fragShader);
     }
-    _hashForUniforms = nullptr;
+    
+    _hashForUniforms.clear();
     
     CHECK_GL_ERROR_DEBUG();
 
@@ -260,7 +249,7 @@ bool GLProgram::initWithPrecompiledProgramByteArray(const GLchar* vShaderByteArr
     haveProgram = CCPrecompiledShaders::getInstance()->loadProgram(_program, vShaderByteArray, fShaderByteArray);
 
     CHECK_GL_ERROR_DEBUG();
-    _hashForUniforms = nullptr;
+    _hashForUniforms.clear();
 
     CHECK_GL_ERROR_DEBUG();  
 
@@ -330,6 +319,12 @@ void GLProgram::parseVertexAttribs()
             }
         }
     }
+    else
+    {
+        GLchar ErrorLog[1024];
+        glGetProgramInfoLog(_program, sizeof(ErrorLog), NULL, ErrorLog);
+        CCLOG("Error linking shader program: '%s'\n", ErrorLog);
+    }
 }
 
 void GLProgram::parseUniforms()
@@ -382,6 +377,14 @@ void GLProgram::parseUniforms()
             }
         }
     }
+    else
+    {
+        GLchar ErrorLog[1024];
+        glGetProgramInfoLog(_program, sizeof(ErrorLog), NULL, ErrorLog);
+        CCLOG("Error linking shader program: '%s'\n", ErrorLog);
+
+    }
+
 }
 
 Uniform* GLProgram::getUniform(const std::string &name)
@@ -418,7 +421,9 @@ bool GLProgram::compileShader(GLuint * shader, GLenum type, const GLchar* source
     }
     
     const GLchar *sources[] = {
-#if (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32 && CC_TARGET_PLATFORM != CC_PLATFORM_LINUX && CC_TARGET_PLATFORM != CC_PLATFORM_MAC)
+#if CC_TARGET_PLATFORM == CC_PLATFORM_WINRT
+        (type == GL_VERTEX_SHADER ? "precision mediump float;\n precision mediump int;\n" : "precision mediump float;\n precision mediump int;\n"),
+#elif (CC_TARGET_PLATFORM != CC_PLATFORM_WIN32 && CC_TARGET_PLATFORM != CC_PLATFORM_LINUX && CC_TARGET_PLATFORM != CC_PLATFORM_MAC)
         (type == GL_VERTEX_SHADER ? "precision highp float;\n precision highp int;\n" : "precision mediump float;\n precision mediump int;\n"),
 #endif
         "uniform mat4 CC_PMatrix;\n"
@@ -562,7 +567,7 @@ bool GLProgram::link()
     
     _vertShader = _fragShader = 0;
     
-#if DEBUG || (CC_TARGET_PLATFORM == CC_PLATFORM_WP8)
+#if DEBUG || (CC_TARGET_PLATFORM == CC_PLATFORM_WP8) || (CC_TARGET_PLATFORM == CC_PLATFORM_WINRT)
     glGetProgramiv(_program, GL_LINK_STATUS, &status);
     
     if (status == GL_FALSE)
@@ -631,31 +636,23 @@ bool GLProgram::updateUniformLocation(GLint location, const GLvoid* data, unsign
     }
 
     bool updated = true;
-    tHashUniformEntry *element = nullptr;
-    HASH_FIND_INT(_hashForUniforms, &location, element);
-
-    if (! element)
+    
+    auto element = _hashForUniforms.find(location);
+    if (element == _hashForUniforms.end())
     {
-        element = (tHashUniformEntry*)malloc( sizeof(*element) );
-
-        // key
-        element->location = location;
-
-        // value
-        element->value = malloc( bytes );
-        memcpy(element->value, data, bytes );
-
-        HASH_ADD_INT(_hashForUniforms, location, element);
+        GLvoid* value = malloc(bytes);
+        memcpy(value, data, bytes );
+        _hashForUniforms.insert(std::make_pair(location, value));
     }
     else
     {
-        if (memcmp(element->value, data, bytes) == 0)
+        if (memcmp(element->second, data, bytes) == 0)
         {
             updated = false;
         }
         else
         {
-            memcpy(element->value, data, bytes);
+            memcpy(element->second, data, bytes);
         }
     }
 
@@ -861,15 +858,14 @@ void GLProgram::setUniformsForBuiltins()
     Director* director = Director::getInstance();
     CCASSERT(nullptr != director, "Director is null when seting matrix stack");
     
-    Mat4 matrixMV;
-    matrixMV = director->getMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_MODELVIEW);
+    auto matrixMV = director->getMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_MODELVIEW);
 
     setUniformsForBuiltins(matrixMV);
 }
 
 void GLProgram::setUniformsForBuiltins(const Mat4 &matrixMV)
 {
-    Mat4 matrixP = Director::getInstance()->getMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
+    auto matrixP = Director::getInstance()->getMatrix(MATRIX_STACK_TYPE::MATRIX_STACK_PROJECTION);
 
     if(_flags.usesP)
         setUniformLocationWithMatrix4fv(_builtInUniforms[UNIFORM_P_MATRIX], matrixP.m, 1);
@@ -921,17 +917,12 @@ void GLProgram::reset()
     //GL::deleteProgram(_program);
     _program = 0;
 
-    
-    tHashUniformEntry *current_element, *tmp;
-    
-    // Purge uniform hash
-    HASH_ITER(hh, _hashForUniforms, current_element, tmp) 
+    for (auto e: _hashForUniforms)
     {
-        HASH_DEL(_hashForUniforms, current_element);
-        free(current_element->value);
-        free(current_element);
+        free(e.second);
     }
-    _hashForUniforms = nullptr;
+    
+    _hashForUniforms.clear();
 }
 
 NS_CC_END

@@ -1,0 +1,25 @@
+dependencies: \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/cocos/base/CCDataVisitor.cpp \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/base/CCRef.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/platform/CCPlatformMacros.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/base/ccConfig.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/platform/CCPlatformConfig.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/platform/CCPlatformDefine.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/platform/ios/CCPlatformDefine-ios.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/deprecated/CCBool.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/base/CCDataVisitor.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/deprecated/CCInteger.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/base/CCConsole.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/base/ccMacros.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/platform/CCStdC.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/platform/ios/CCStdC-ios.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/base/ccRandom.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/platform/CCCommon.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/deprecated/CCFloat.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/deprecated/CCDouble.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/deprecated/CCString.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/deprecated/CCArray.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/base/ccCArray.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/deprecated/CCDictionary.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/base/uthash.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/deprecated/CCSet.h

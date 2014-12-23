@@ -9,7 +9,7 @@ the old code to it
 * Created a skeleton game using
 ```
 cd ~/code
-cocos new -p com.gatillos.js02 -l js -d . js-multiplatform-game02
+cocos new -e ~/Documents/cocos/cocos2d-js-v3.2-rc0/ -p com.gatillos.js03 -l js -d . js-multiplatform-game03
 ```
 
 After this, the structure will look something like:

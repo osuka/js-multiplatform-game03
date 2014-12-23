@@ -203,12 +203,17 @@ ccui.Scale9Sprite = cc.Node.extend(/** @lends ccui.Scale9Sprite# */{
     _cacheScale9Sprite: function(){
         if(!this._scale9Image)
             return;
-        var size = this._contentSize, locCanvas = this._cacheCanvas;
+
+        var locScaleFactor = cc.contentScaleFactor();
+        var size = this._contentSize;
+        var sizeInPixels = cc.size(size.width * locScaleFactor, size.height * locScaleFactor);
+
+        var locCanvas = this._cacheCanvas;
         var contentSizeChanged = false;
-        if(locCanvas.width != size.width || locCanvas.height != size.height){
-            locCanvas.width = size.width;
-            locCanvas.height = size.height;
-            this._cacheContext.translate(0, size.height);
+        if(locCanvas.width != sizeInPixels.width || locCanvas.height != sizeInPixels.height){
+            locCanvas.width = sizeInPixels.width;
+            locCanvas.height = sizeInPixels.height;
+            this._cacheContext.translate(0, sizeInPixels.height);
             contentSizeChanged = true;
         }
 
@@ -217,8 +222,8 @@ ccui.Scale9Sprite = cc.Node.extend(/** @lends ccui.Scale9Sprite# */{
         this._scale9Image.visit();
 
         //draw to cache canvas
-        this._cacheContext.clearRect(0, 0, size.width, -size.height);
-        cc.renderer._renderingToCacheCanvas(this._cacheContext, this.__instanceId);
+        this._cacheContext.clearRect(0, 0, sizeInPixels.width, -sizeInPixels.height);
+        cc.renderer._renderingToCacheCanvas(this._cacheContext, this.__instanceId, locScaleFactor, locScaleFactor);
 
         if(contentSizeChanged)
             this._cacheSprite.setTextureRect(cc.rect(0,0, size.width, size.height));
@@ -272,6 +277,10 @@ ccui.Scale9Sprite = cc.Node.extend(/** @lends ccui.Scale9Sprite# */{
         }else{
             this.init();
         }
+    },
+
+    getSprite: function () {
+        return this._scale9Image;
     },
 
     /** Original sprite's size. */
@@ -479,34 +488,6 @@ ccui.Scale9Sprite = cc.Node.extend(/** @lends ccui.Scale9Sprite# */{
     _setHeight: function (value) {
         cc.Node.prototype._setHeight.call(this, value);
         this._positionsAreDirty = true;
-    },
-
-    visit: function (ctx) {
-        if(!this._visible){
-            return;
-        }
-
-        if (this._positionsAreDirty) {
-            this._updatePositions();
-            this._positionsAreDirty = false;
-            this._scale9Dirty = true;
-        }
-        if(cc._renderType === cc._RENDER_TYPE_CANVAS){
-            this._scale9Dirty = false;
-            this._cacheScale9Sprite();
-
-            cc.Node.prototype.visit.call(this, ctx);
-        }else{
-            cc.Node.prototype.visit.call(this, ctx);
-        }
-    },
-
-    _transformForRenderer: function(){
-        if(cc._renderType === cc._RENDER_TYPE_CANVAS){
-            this._cacheScale9Sprite();
-            this.transform();
-        }
-        cc.Node.prototype._transformForRenderer.call(this);
     },
 
     /**
@@ -1023,6 +1004,13 @@ ccui.Scale9Sprite = cc.Node.extend(/** @lends ccui.Scale9Sprite# */{
         this._insetTop = 0;
         this._insetRight = 0;
         this._insetBottom = 0;
+    },
+
+    _createRenderCmd: function(){
+        if(cc._renderType === cc._RENDER_TYPE_CANVAS)
+            return new ccui.Scale9Sprite.CanvasRenderCmd(this);
+        else
+            return new ccui.Scale9Sprite.WebGLRenderCmd(this);
     }
 });
 

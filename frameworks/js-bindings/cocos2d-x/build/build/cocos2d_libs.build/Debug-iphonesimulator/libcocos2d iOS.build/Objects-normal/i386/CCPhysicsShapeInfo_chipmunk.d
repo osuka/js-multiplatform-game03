@@ -1,0 +1,29 @@
+dependencies: \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/cocos/physics/chipmunk/CCPhysicsShapeInfo_chipmunk.cpp \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/cocos/physics/chipmunk/CCPhysicsShapeInfo_chipmunk.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/base/ccConfig.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/platform/CCPlatformConfig.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/platform/CCPlatformMacros.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/platform/CCPlatformDefine.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../cocos/platform/ios/CCPlatformDefine-ios.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/chipmunk.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/chipmunk_types.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/cpVect.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/cpBB.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/cpSpatialIndex.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/cpBody.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/cpShape.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/cpPolyShape.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/cpArbiter.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/constraints/cpConstraint.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/constraints/cpPinJoint.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/constraints/cpSlideJoint.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/constraints/cpPivotJoint.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/constraints/cpGrooveJoint.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/constraints/cpDampedSpring.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/constraints/cpDampedRotarySpring.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/constraints/cpRotaryLimitJoint.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/constraints/cpRatchetJoint.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/constraints/cpGearJoint.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/constraints/cpSimpleMotor.h \
+  /Users/osuka/Documents/code/js-multiplatform-game03/frameworks/js-bindings/cocos2d-x/build/../external/chipmunk/include/chipmunk/cpSpace.h
