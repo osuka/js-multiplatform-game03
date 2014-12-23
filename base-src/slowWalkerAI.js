@@ -3,6 +3,8 @@
   
   var SlowWalkerAI = function () {
 
+    SlowWalkerAI.prototype.name = 'SlowWalkerAI';
+
     SlowWalkerAI.prototype.init = function () {
       this.direction = cp.v(0, 0);
       this.timeFromLastDirectionChangeMs = 0;
@@ -77,7 +79,7 @@
     SlowWalkerAI.prototype.update = function (dt, sprite, body) {
 
       if (!this.direction) {
-        return;
+        return true;
       }
 
       this.timeFromLastDirectionChangeMs += dt;
@@ -102,6 +104,7 @@
       }
       this.setAnimation(sprite);
       
+      return true;
     };
 
   };

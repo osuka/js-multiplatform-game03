@@ -8,6 +8,7 @@
   var ScreenDimensions = require('./screenDimensions');
   var SlowWalkerAI = require('./slowWalkerAI');
   var WalkToGoalAI = require('./walkToGoalAI');
+  var WaitForDestinationAI = require('./waitForDestinationAI');
 
   var ChapterOne = BaseLayer.extend({
 
@@ -273,16 +274,17 @@
       gameArea.getChildByTag(this.TAG_TILEMAP);
       var scale = tilemapSprite.getScale();
 
-      var attackers = tilemap.getObjectGroup('attackers').getObjects();
+      var attackerObjects = tilemap.getObjectGroup('attackers').getObjects();
       var tag = 11000;
-      for (var i = 0; i < attackers.length; i++) {
-        var pos = this.ccPosForObject(attackers[i], scale);
-        var sprite = this.createSampleChar('persona',
+      var _this = this;
+      attackerObjects.forEach(function (attackerObject) {
+        var pos = _this.ccPosForObject(attackerObject, scale);
+        var sprite = _this.createSampleChar('persona',
           pos, tag + 1, 1 /* zoom */);
-        this.attackers.push(sprite);
-        sprite.ai = new SlowWalkerAI();
-        sprite.ai.init();
-      }
+        _this.attackers.push(sprite);
+        var behaviour = _this.addBehaviour(sprite, SlowWalkerAI);
+        behaviour.init();
+      });
     },
 
     createDefendants: function (tilemap) {
@@ -291,16 +293,17 @@
       gameArea.getChildByTag(this.TAG_TILEMAP);
       var scale = tilemapSprite.getScale();
 
-      var attackers = tilemap.getObjectGroup('defendants').getObjects();
+      var attackerObjects = tilemap.getObjectGroup('defendants').getObjects();
       var tag = 12000;
-      for (var i = 0; i < attackers.length; i++) {
-        var pos = this.ccPosForObject(attackers[i], scale);
-        var sprite = this.createSampleChar('defendant',
+      var _this = this;
+      attackerObjects.forEach(function (attackerObject) {
+        var pos = _this.ccPosForObject(attackerObject, scale);
+        var sprite = _this.createSampleChar('defendant',
           pos, tag + 1, 1 /* no zoom */);
-        this.defendants.push(sprite);
-        sprite.ai = new WalkToGoalAI();
-        sprite.ai.init(this._getGameArea().getChildByTag(this.TAG_GOAL));
-      }
+        _this.defendants.push(sprite);
+        var behaviour = _this.addBehaviour(sprite, WalkToGoalAI);
+        behaviour.init(_this._getGameArea().getChildByTag(_this.TAG_GOAL));
+      });
     },
 
     createGenerators: function (tilemap) {
@@ -342,35 +345,91 @@
     checkGeneratorClicked: function (point) {
       var tag = 10000; // TODO: need a different tag?
       var worldRect = this.pointToWorldRect(point);
-      for (var i = 0; i < this.attackGenerators.length; i++) {
-        var r = this.attackGenerators[i];
+      var _this = this;
+      this.attackGenerators.forEach(function (r) {
         if (cc.rectIntersectsRect(worldRect, r)) {
           var center = cc.p(
              worldRect.x + worldRect.width / 2,
              worldRect.y + worldRect.height / 2);
-          this.createSampleChar('persona',
+          _this.createSampleChar('persona',
             center, tag, 1 /* zoom */);
           return center;
         }
-      }
+      });
     },
 
     // if a character is clicked
     checkAttackerClicked: function (point) {
       var worldRect = this.pointToWorldRect(point);
+
       for (var i = 0; i < this.attackers.length; i++) {
         var sprite = this.attackers[i];
         var r = cc.rect(sprite.x - sprite.getContentSize().width / 2,
           sprite.y - sprite.getContentSize().height / 2,
           sprite.getContentSize().width,
           sprite.getContentSize().height);
-        if (cc.rectIntersectsRect(worldRect, r)) {
-          var spriteAction = cc.TintTo.create(2, 0, 0, 240);
-          sprite.runAction(spriteAction);
-          sprite.ai = new SlowWalkerAI();
-          sprite.ai.init();
+
+        var intersects = cc.rectIntersectsRect(worldRect, r);
+        if (intersects && this.selectedAttacker !== sprite) {
+          if (this.selectedAttacker) {
+            // remove from previous selection
+            this.removeBehaviour(this.selectedAttacker, WaitForDestinationAI);
+          }
+          var behaviour = this.addBehaviour(sprite, WaitForDestinationAI);
+          behaviour.init(sprite);
+          this.selectedAttacker = sprite;
+          return; // only one click allowed
         }
       }
+    },
+
+    // can search in list / directly in object
+    findBehaviour: function (where, BehaviourClass) {
+      // todo: add isArray
+      var list = typeof where.push === 'function' ? where : [where];
+      for (var i = 0; i < list.length; i++) {
+        var sprite = list[i];
+        if (!sprite.behaviours) {
+          continue;
+        }
+        for (var j = 0; j < sprite.behaviours.length; j++) {
+          var behaviour = sprite.behaviours[j];
+          if (behaviour.name === BehaviourClass.prototype.name) {
+            return sprite;
+          }
+        }
+      }
+    },
+
+    // remove behaviour from a sprite
+    removeBehaviour: function (sprite, BehaviourClass) {
+      if (!sprite.behaviours) {
+        return;
+      }
+      for (var j = 0; j < sprite.behaviours.length; j++) {
+        if (sprite.behaviours[j].name === BehaviourClass.prototype.name) {
+          var behaviour = sprite.behaviours[j];
+          sprite.behaviours.splice(j, 1); // delete element
+          if (typeof behaviour.detach === 'function') {
+            behaviour.detach(sprite);
+            return;
+          }
+        }
+      }
+    },
+
+    // add behaviour to a sprite
+    addBehaviour: function (sprite, BehaviourClass) {
+      if (!sprite.behaviours) {
+        sprite.behaviours = [];
+      }
+      var behaviour = new BehaviourClass();
+      if (this.findBehaviour(sprite, BehaviourClass)) {
+        console.log('Attempt to duplicate behaviour');
+        return;
+      }
+      sprite.behaviours.push(behaviour);
+      return behaviour;
     },
 
     createSolids: function (tilemap) {
@@ -381,12 +440,13 @@
       var tilemapSprite =
       gameArea.getChildByTag(this.TAG_TILEMAP);
       var scale = tilemapSprite.getScale();
-      for (var i = 0; i < objects.length; i++) {
-        var shape = this.shapeForObject(objects[i], scale);
-        this.space.addStaticShape(shape);
+      var _this = this;
+      objects.forEach(function (obj) {
+        var shape = _this.shapeForObject(obj, scale);
+        _this.space.addStaticShape(shape);
         shape.setElasticity(0);
         shape.setFriction(1);
-      }
+      });
     },
 
     createSpriteBatch: function () {
@@ -553,24 +613,33 @@
       /*jshint maxdepth:5 */
       var animations = cc.animationCache;
       var cache = cc.spriteFrameCache;
-      for (var name in this.characters) {
-        var states = this.characters[name]; // e.g. 'persona'
-        for (var state in states) { // e.g. 'up'
-          var animation = cc.Animation.create();
-          var frames = states[state]; // array of file names
-          for (var f in frames) {
-            var fileName = frames[f].file + '.png';
-            var frame = cache.getSpriteFrame(fileName);
-            if (!frame) {
-              continue;
-            } else {
-              animation.addSpriteFrame(frame);
-            }
-          }
+
+      var animation;
+      var addFrameToAnimation = function (frame) {
+        var fileName = frame.file + '.png';
+        var spriteFrame = cache.getSpriteFrame(fileName);
+        if (spriteFrame) {
+          animation.addSpriteFrame(spriteFrame);
+        }
+      };
+
+      // iterate over all characters
+      for (var character in this.characters) {
+
+        // iterate over all possible states
+        for (var state in this.characters[character]) {
+
+          animation = cc.Animation.create();
           animation.setDelayPerUnit(0.150);
           animation.setLoops(true);
-          // cache them like: <characterName> + '.' + <stateName>
-          animations.addAnimation(animation, name + '.' + state);
+
+          // iterate over animation frames for that state
+          this.characters[character][state].forEach(addFrameToAnimation);
+
+          // cache animation objects with: <characterName> + '.' + <stateName>
+          // e.g. 'defendant.standing'
+          animations.addAnimation(animation, character + '.' + state);
+
         }
       }
     },
@@ -735,19 +804,29 @@
         var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
         var spriteBatchNode = gameArea.getChildByTag(this.TAG_SPRITEBATCH);
         spriteBatchNode.getChildren().forEach(function (child) {
-          if (typeof child.ai === 'object') {
-            child.ai.update(elapsed, child, child.getBody());
-          }
+          _this.runBehaviours(elapsed, child, child.getBody());
         });
+      }
+    },
+
+    // Runs sprite defined behaviours until one returns false or
+    // there's no more
+    runBehaviours: function (dt, sprite, body) {
+      if (!sprite.behaviours) {
+        return;
+      }
+      for (var i = sprite.behaviours.length - 1; i >= 0; i--) {
+        var behaviour = sprite.behaviours[i];
+        var ret = behaviour.update(dt, sprite, body);
+        if (!ret) {
+          break;
+        }
       }
     },
 
     applyAIToBody: function (dt, body) {
       if (body && body.userData) {
-        var sprite = body.userData;
-        if (typeof sprite.ai === 'object') {
-          sprite.ai.update(dt, sprite, body);
-        }
+        this.runBehaviours(dt, body.userData, body);
       }
     },
 

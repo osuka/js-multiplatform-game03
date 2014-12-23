@@ -3,6 +3,8 @@
   
   var WalkToGoalAI = function () {
 
+    WalkToGoalAI.prototype.name = 'WalkToGoalAI';
+
     WalkToGoalAI.prototype.init = function (goal) {
       this.direction = cp.v(0, 0);
       this.timeFromLastDirectionChangeMs = 0;
@@ -89,7 +91,7 @@
     WalkToGoalAI.prototype.update = function (dt, sprite, body) {
 
       if (!this.goal) {
-        return;
+        return true;
       }
 
       this.timeFromLastDirectionChangeMs += dt;
@@ -115,6 +117,7 @@
       }
       this.setAnimation(sprite);
       
+      return true;
     };
 
   };
