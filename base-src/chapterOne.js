@@ -9,6 +9,10 @@
   var SlowWalkerAI = require('./slowWalkerAI');
   var WalkToGoalAI = require('./walkToGoalAI');
   var WaitForDestinationAI = require('./waitForDestinationAI');
+  var WalkToDestinationAI = require('./walkToDestinationAI');
+  var AStarModule = require('./external/astar.js');
+  // var astar = AStarModule.astar;
+  var Graph = AStarModule.Graph;
 
   var ChapterOne = BaseLayer.extend({
 
@@ -46,6 +50,10 @@
       this.createDefendants(tilemap);
 
       this.autoMap('layer1', tilemap);
+
+      this.updateMapGraph();
+
+      // this.toggleDebug();
 
       var pos = cc.p(0, 0);
       this.ensureGameAreaPositionWithinBoundaries(pos);
@@ -238,7 +246,7 @@
     },
 
     createGoal: function (tilemap) {
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
+      var gameArea = this._getGameArea();
       var scale = this._getTilemapScale();
 
       var goals = tilemap.getObjectGroup('goal').getObjects();
@@ -269,11 +277,7 @@
     },
 
     createAttackers: function (tilemap) {
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
-      var tilemapSprite =
-      gameArea.getChildByTag(this.TAG_TILEMAP);
-      var scale = tilemapSprite.getScale();
-
+      var scale = this._getTilemapScale();
       var attackerObjects = tilemap.getObjectGroup('attackers').getObjects();
       var tag = 11000;
       var _this = this;
@@ -288,11 +292,7 @@
     },
 
     createDefendants: function (tilemap) {
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
-      var tilemapSprite =
-      gameArea.getChildByTag(this.TAG_TILEMAP);
-      var scale = tilemapSprite.getScale();
-
+      var scale = this._getTilemapScale();
       var attackerObjects = tilemap.getObjectGroup('defendants').getObjects();
       var tag = 12000;
       var _this = this;
@@ -312,10 +312,7 @@
       var defendants = tilemap.getObjectGroup('generator-defendant')
         .getObjects();
 
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
-      var tilemapSprite =
-      gameArea.getChildByTag(this.TAG_TILEMAP);
-      var scale = tilemapSprite.getScale();
+      var scale = this._getTilemapScale();
       var _this = this;
       this.attackGenerators = attackers.map(function (obj) {
         return _this.ccRectForObject(obj, scale);
@@ -329,7 +326,7 @@
     // Transforms a click/touch into a square in world coordinates
     // that can be used with cc.rectIntersectsRect
     pointToWorldRect: function (point) {
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
+      var gameArea = this._getGameArea();
       var worldPoint = {
         x : (point.x - gameArea.getPosition().x) / gameArea.scale,
         y : (point.y - gameArea.getPosition().y) / gameArea.scale
@@ -361,6 +358,7 @@
     // if a character is clicked
     checkAttackerClicked: function (point) {
       var worldRect = this.pointToWorldRect(point);
+      var behaviour;
 
       for (var i = 0; i < this.attackers.length; i++) {
         var sprite = this.attackers[i];
@@ -375,12 +373,30 @@
             // remove from previous selection
             this.removeBehaviour(this.selectedAttacker, WaitForDestinationAI);
           }
-          var behaviour = this.addBehaviour(sprite, WaitForDestinationAI);
-          behaviour.init(sprite);
-          this.selectedAttacker = sprite;
+          if (this.findBehaviour(sprite, WalkToDestinationAI)) {
+            // cancel walk
+            this.removeBehaviour(sprite, WalkToDestinationAI);
+          } else {
+            behaviour = this.addBehaviour(sprite, WaitForDestinationAI);
+            behaviour.init(sprite);
+            this.selectedAttacker = sprite;
+          }
           return; // only one click allowed
         }
       }
+      
+      // if we get here, we clicked but not in a player so it can be
+      // choosing destination
+      if (this.selectedAttacker) {
+        var destination = cc.p(worldRect.x + worldRect.width / 2,
+                               worldRect.y + worldRect.height / 2);
+        this.removeBehaviour(this.selectedAttacker, WaitForDestinationAI);
+        behaviour = this.addBehaviour(this.selectedAttacker,
+          WalkToDestinationAI);
+        behaviour.init(this.selectedAttacker, destination, this._mapGraph);
+        this.selectedAttacker = undefined;
+      }
+
     },
 
     // can search in list / directly in object
@@ -418,6 +434,21 @@
       }
     },
 
+    removeBehaviourInstance: function (sprite, behaviour) {
+      if (!sprite.behaviours) {
+        return;
+      }
+      for (var j = 0; j < sprite.behaviours.length; j++) {
+        if (sprite.behaviours[j] === behaviour) {
+          sprite.behaviours.splice(j, 1); // delete element
+          if (typeof behaviour.detach === 'function') {
+            behaviour.detach(sprite);
+            return;
+          }
+        }
+      }
+    },
+
     // add behaviour to a sprite
     addBehaviour: function (sprite, BehaviourClass) {
       if (!sprite.behaviours) {
@@ -436,16 +467,138 @@
       var objectGroup = tilemap.getObjectGroup('solids');
       var objects = objectGroup.getObjects();
 
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
-      var tilemapSprite =
-      gameArea.getChildByTag(this.TAG_TILEMAP);
-      var scale = tilemapSprite.getScale();
+      var scale = this._getTilemapScale();
       var _this = this;
       objects.forEach(function (obj) {
         var shape = _this.shapeForObject(obj, scale);
         _this.space.addStaticShape(shape);
         shape.setElasticity(0);
         shape.setFriction(1);
+      });
+    },
+
+    // updates/creates a Graph for pathfinding in this physics world
+    updateMapGraph: function () {
+      // jshint maxstatements:100
+      var tilemap = this._getTilemap();
+      var gameArea = this._getGameArea();
+      this._mapGraph = this._mapGraph || {};
+      this._mapGraph.granularity = this._mapGraph.granularity || {
+        x: tilemap.getTileSize().width * gameArea.getScale() / 2,
+        y: tilemap.getTileSize().height * gameArea.getScale() / 2
+      };
+
+      // checks if a shape blocks part of the pathfinding grid
+      var granularity = this._mapGraph.granularity;
+      var checkShape = function (shape, data) {
+        var bb = shape.getBB();
+        for (var x = bb.l; x < bb.r; x += granularity.x) {
+          for (var y = bb.b; y < bb.t; y += granularity.y) {
+            var iPos = Math.floor(x / granularity.x);
+            var jPos = Math.floor(y / granularity.y);
+            if (iPos >= 0 && iPos < data.length &&
+                jPos >= 0 && jPos < data[iPos].length) {
+              data[iPos][jPos] = 0;
+            }
+          }
+        }
+      };
+
+      // cache static objects grid
+      var createEmptyGrid = function (width, height) {
+        var grid = [];
+        for (var i = 0; i < width; i++) {
+          var row = [];
+          for (var j = 0; j < height; j++) {
+            row.push(1);
+          }
+          grid.push(row);
+        }
+        return grid;
+      };
+
+      if (!this._mapGraph.tileCache) {
+        this._mapGraph.tileCache = createEmptyGrid(
+          Math.floor(this.worldSize.width / granularity.x),
+          Math.floor(this.worldSize.height / granularity.y));
+        // check only shapes that are from static bodies
+        var cache = this._mapGraph.tileCache;
+        this.space.eachShape(function (shape) {
+          if (shape.body.isStatic()) {
+            checkShape(shape, cache);
+          }
+        });
+      }
+
+      if (!this._mapGraph.cache) {
+        this._mapGraph.cache = createEmptyGrid(
+          Math.floor(this.worldSize.width / granularity.x),
+          Math.floor(this.worldSize.height / granularity.y));
+      }
+
+      // init to cache
+      for (var i = 0; i < this.worldSize.width / granularity.x; i++) {
+        for (var j = 0; j < this.worldSize.height / granularity.y; j++) {
+          this._mapGraph.cache[i][j] = this._mapGraph.tileCache[i][j];
+        }
+      }
+
+      // check only shapes that are not static shape
+      var data = this._mapGraph.cache;
+      this.space.eachShape(function (shape) {
+        if (!shape.body.isStatic()) {
+          checkShape(shape, data);
+        }
+      });
+
+      this._mapGraph.graph = new Graph(this._mapGraph.cache,
+        { diagonal: true });
+      // this.drawMapGraphOverlay();
+    },
+
+    drawMapGraphOverlay: function () {
+      var overlay = this._getOverlayArea();
+      overlay.removeAllChildren(true);
+      var data = this._mapGraph.graph.grid;
+      var granularity = this._mapGraph.granularity;
+      for (var i = 0; i < data.length; i++) {
+        for (var j = 0; j < data[i].length; j++) {
+          if (data[i][j].weight) {
+            var sprite = new cc.Sprite();
+            sprite.initWithFile('res/images/1x1-pixel.png',
+              cc.rect(0, 0, 1, 1));
+            sprite.setScale(granularity.x);
+            sprite.setAnchorPoint(cc.p(0, 0));
+            sprite.setPosition(cc.p(i * granularity.x, j * granularity.y));
+            // sprite.opacity = 80;
+            overlay.addChild(sprite);
+          }
+        }
+      }
+    },
+
+    drawShapesOverlay: function () {
+      var overlay = this._getOverlayArea();
+      overlay.removeAllChildren(true);
+      this.space.eachShape(function (shape) {
+        var sprite = new cc.Sprite();
+        sprite.initWithFile('res/images/1x1-pixel.png',
+          cc.rect(0, 0, 1, 1));
+        var bb = shape.getBB();
+        sprite.setScaleX(Math.abs(bb.r - bb.l));
+        sprite.setScaleY(Math.abs(bb.t - bb.b));
+        sprite.setAnchorPoint(cc.p(0.5, 0.5));
+        sprite.setPosition(shape.getBody().getPos());
+        overlay.addChild(sprite);
+      });
+      this.space.eachBody(function (body) {
+        var sprite = new cc.Sprite();
+        sprite.initWithFile('res/images/joystick-button.png',
+          cc.rect(0, 0, 75, 75));
+        sprite.setScale(4.0 / 75);
+        sprite.setAnchorPoint(cc.p(0.5, 0.5));
+        sprite.setPosition(body.getPos());
+        overlay.addChild(sprite);
       });
     },
 
@@ -460,7 +613,7 @@
       }
       var spriteBatch = cc.SpriteBatchNode.create(spritesheetName + '.png');
       cc.spriteFrameCache.addSpriteFrames(spritesheetName + '.plist');
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
+      var gameArea = this._getGameArea();
       gameArea.addChild(spriteBatch, 100, this.TAG_SPRITEBATCH);
     },
 
@@ -501,7 +654,7 @@
     },
 
     createSampleChar: function (character, pos, tag, zoom) {
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
+      var gameArea = this._getGameArea();
       var spriteBatch = gameArea.getChildByTag(this.TAG_SPRITEBATCH);
 
       var orientations = ['.standing', '.right', '.left', '.up', '.down'];
@@ -664,7 +817,7 @@
 
     fire1: function () {
       //this.toggleDebug();
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
+      var gameArea = this._getGameArea();
       var newScale = Math.max(gameArea.getScale() / 2, 0.25);
       gameArea.runAction(
         cc.ScaleTo.create(0.5, newScale)
@@ -673,7 +826,7 @@
 
     fire2: function () {
       // this.toggleDebug();
-      var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
+      var gameArea = this._getGameArea();
       var newScale = Math.min(gameArea.getScale() * 2, 2);
       gameArea.runAction(
         cc.ScaleTo.create(0.5, newScale)
@@ -782,6 +935,8 @@
     },
 
     update: function (dt) {
+      // this.drawShapesOverlay();
+
       this.lastTime += dt; // in seconds
       if (this.lastTime > 1) {
         this.lastTime = 1; // cap time lapses to keep physics correct
@@ -789,6 +944,16 @@
       var elapsed = this.lastTime;
       this.lastTime = 0;
       this._super(elapsed);
+
+      // todo: move this somewhere saner
+      if (typeof this.lastMapUpdate === 'undefined') {
+        this.lastMapUpdate = 0;
+      }
+      this.lastMapUpdate += elapsed;
+      if (this.lastMapUpdate > 1.0) {
+        this.lastMapUpdate = 0;
+        this.updateMapGraph(); // for pathfinding
+      }
 
       this.updateGameAreaPosition(elapsed);
 /*      if (elapsed < 0.05) {
@@ -801,7 +966,7 @@
           _this.applyAIToBody(elapsed, body);
         });
       } else { // not defined in native code
-        var gameArea = this.getChildByTag(this.TAG_GAMEAREA_LAYER);
+        var gameArea = this._getGameArea();
         var spriteBatchNode = gameArea.getChildByTag(this.TAG_SPRITEBATCH);
         spriteBatchNode.getChildren().forEach(function (child) {
           _this.runBehaviours(elapsed, child, child.getBody());
@@ -815,12 +980,19 @@
       if (!sprite.behaviours) {
         return;
       }
+      var toRemove = [];
       for (var i = sprite.behaviours.length - 1; i >= 0; i--) {
         var behaviour = sprite.behaviours[i];
         var ret = behaviour.update(dt, sprite, body);
+        if (ret === 'detach') {
+          toRemove.push(behaviour);
+        }
         if (!ret) {
           break;
         }
+      }
+      for (var j = 0; j < toRemove.length; j++) {
+        this.removeBehaviourInstance(sprite, toRemove[j]);
       }
     },
 
@@ -834,6 +1006,16 @@
       var controls = this.getChildByTag(this.TAG_CONTROLS_LAYER);
       var pad = controls.getChildByTag(this.TAG_JOYSTICK);
       return pad.getPadPosition();
+    },
+
+    _getOverlayArea: function () {
+      var overlay = this._getGameArea().getChildByTag(this.TAG_OVERLAY_LAYER);
+      if (!overlay) {
+        overlay = new cc.Layer();
+        this._getGameArea().addChild(overlay, this.GAMEAREA_LAYER_ZORDER + 1,
+          this.TAG_OVERLAY_LAYER);
+      }
+      return overlay;
     },
 
     _getGameArea: function () {

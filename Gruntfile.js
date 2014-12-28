@@ -51,7 +51,8 @@ module.exports = function (grunt) {
         '<%= paths.src %>/{,*/}*.js',
         '<%= paths.res %>/{,*/}*.js',
         '<%= paths.webhome %>/*.js',
-        '<%= paths.test %>/spec/{,*/}*.js'
+        '<%= paths.test %>/spec/{,*/}*.js',
+        '!<%= paths.src %>/external/{,*/}*.js'
       ]
     },
 
