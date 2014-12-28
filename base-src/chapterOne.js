@@ -6,10 +6,12 @@
   var PhysicsSpriteHelper = require('./physicsSprite');
   var BaseLayer = require('./baseLayer');
   var ScreenDimensions = require('./screenDimensions');
-  var SlowWalkerAI = require('./slowWalkerAI');
-  var WalkToGoalAI = require('./walkToGoalAI');
-  var WaitForDestinationAI = require('./waitForDestinationAI');
-  var WalkToDestinationAI = require('./walkToDestinationAI');
+  var behaviourHandler = require('./behaviours/behaviourHandler');
+  var MovementActuator = require('./behaviours/movementActuator');
+  // var SlowWalkerAI = require('./behaviours/slowWalkerAI');
+  var WalkToGoalAI = require('./behaviours/walkToGoalAI');
+  var WaitForDestinationAI = require('./behaviours/waitForDestinationAI');
+  var WalkToDestinationAI = require('./behaviours/walkToDestinationAI');
   var AStarModule = require('./external/astar.js');
   // var astar = AStarModule.astar;
   var Graph = AStarModule.Graph;
@@ -53,7 +55,7 @@
 
       this.updateMapGraph();
 
-      // this.toggleDebug();
+      this.toggleDebug();
 
       var pos = cc.p(0, 0);
       this.ensureGameAreaPositionWithinBoundaries(pos);
@@ -286,7 +288,8 @@
         var sprite = _this.createSampleChar('persona',
           pos, tag + 1, 1 /* zoom */);
         _this.attackers.push(sprite);
-        var behaviour = _this.addBehaviour(sprite, SlowWalkerAI);
+        var behaviour = behaviourHandler.addBehaviour(sprite,
+          MovementActuator);
         behaviour.init();
       });
     },
@@ -301,7 +304,7 @@
         var sprite = _this.createSampleChar('defendant',
           pos, tag + 1, 1 /* no zoom */);
         _this.defendants.push(sprite);
-        var behaviour = _this.addBehaviour(sprite, WalkToGoalAI);
+        var behaviour = behaviourHandler.addBehaviour(sprite, WalkToGoalAI);
         behaviour.init(_this._getGameArea().getChildByTag(_this.TAG_GOAL));
       });
     },
@@ -371,13 +374,15 @@
         if (intersects && this.selectedAttacker !== sprite) {
           if (this.selectedAttacker) {
             // remove from previous selection
-            this.removeBehaviour(this.selectedAttacker, WaitForDestinationAI);
+            behaviourHandler.removeBehaviour(this.selectedAttacker,
+              WaitForDestinationAI);
           }
-          if (this.findBehaviour(sprite, WalkToDestinationAI)) {
+          if (behaviourHandler.findBehaviour(sprite, WalkToDestinationAI)) {
             // cancel walk
-            this.removeBehaviour(sprite, WalkToDestinationAI);
+            behaviourHandler.removeBehaviour(sprite, WalkToDestinationAI);
           } else {
-            behaviour = this.addBehaviour(sprite, WaitForDestinationAI);
+            behaviour = behaviourHandler.addBehaviour(sprite,
+              WaitForDestinationAI);
             behaviour.init(sprite);
             this.selectedAttacker = sprite;
           }
@@ -390,8 +395,9 @@
       if (this.selectedAttacker) {
         var destination = cc.p(worldRect.x + worldRect.width / 2,
                                worldRect.y + worldRect.height / 2);
-        this.removeBehaviour(this.selectedAttacker, WaitForDestinationAI);
-        behaviour = this.addBehaviour(this.selectedAttacker,
+        behaviourHandler.removeBehaviour(this.selectedAttacker,
+          WaitForDestinationAI);
+        behaviour = behaviourHandler.addBehaviour(this.selectedAttacker,
           WalkToDestinationAI);
         behaviour.init(this.selectedAttacker, destination, this._mapGraph);
         this.selectedAttacker = undefined;
@@ -399,69 +405,6 @@
 
     },
 
-    // can search in list / directly in object
-    findBehaviour: function (where, BehaviourClass) {
-      // todo: add isArray
-      var list = typeof where.push === 'function' ? where : [where];
-      for (var i = 0; i < list.length; i++) {
-        var sprite = list[i];
-        if (!sprite.behaviours) {
-          continue;
-        }
-        for (var j = 0; j < sprite.behaviours.length; j++) {
-          var behaviour = sprite.behaviours[j];
-          if (behaviour.name === BehaviourClass.prototype.name) {
-            return sprite;
-          }
-        }
-      }
-    },
-
-    // remove behaviour from a sprite
-    removeBehaviour: function (sprite, BehaviourClass) {
-      if (!sprite.behaviours) {
-        return;
-      }
-      for (var j = 0; j < sprite.behaviours.length; j++) {
-        if (sprite.behaviours[j].name === BehaviourClass.prototype.name) {
-          var behaviour = sprite.behaviours[j];
-          sprite.behaviours.splice(j, 1); // delete element
-          if (typeof behaviour.detach === 'function') {
-            behaviour.detach(sprite);
-            return;
-          }
-        }
-      }
-    },
-
-    removeBehaviourInstance: function (sprite, behaviour) {
-      if (!sprite.behaviours) {
-        return;
-      }
-      for (var j = 0; j < sprite.behaviours.length; j++) {
-        if (sprite.behaviours[j] === behaviour) {
-          sprite.behaviours.splice(j, 1); // delete element
-          if (typeof behaviour.detach === 'function') {
-            behaviour.detach(sprite);
-            return;
-          }
-        }
-      }
-    },
-
-    // add behaviour to a sprite
-    addBehaviour: function (sprite, BehaviourClass) {
-      if (!sprite.behaviours) {
-        sprite.behaviours = [];
-      }
-      var behaviour = new BehaviourClass();
-      if (this.findBehaviour(sprite, BehaviourClass)) {
-        console.log('Attempt to duplicate behaviour');
-        return;
-      }
-      sprite.behaviours.push(behaviour);
-      return behaviour;
-    },
 
     createSolids: function (tilemap) {
       var objectGroup = tilemap.getObjectGroup('solids');
@@ -481,11 +424,11 @@
     updateMapGraph: function () {
       // jshint maxstatements:100
       var tilemap = this._getTilemap();
-      var gameArea = this._getGameArea();
+      var mult = ScreenDimensions.scale / 2;
       this._mapGraph = this._mapGraph || {};
       this._mapGraph.granularity = this._mapGraph.granularity || {
-        x: tilemap.getTileSize().width * gameArea.getScale() / 2,
-        y: tilemap.getTileSize().height * gameArea.getScale() / 2
+        x: tilemap.getTileSize().width * mult,
+        y: tilemap.getTileSize().height * mult
       };
 
       // checks if a shape blocks part of the pathfinding grid
@@ -816,7 +759,7 @@
     },
 
     fire1: function () {
-      //this.toggleDebug();
+      // this.toggleDebug();
       var gameArea = this._getGameArea();
       var newScale = Math.max(gameArea.getScale() / 2, 0.25);
       gameArea.runAction(
@@ -969,36 +912,14 @@
         var gameArea = this._getGameArea();
         var spriteBatchNode = gameArea.getChildByTag(this.TAG_SPRITEBATCH);
         spriteBatchNode.getChildren().forEach(function (child) {
-          _this.runBehaviours(elapsed, child, child.getBody());
+          behaviourHandler.runBehaviours(elapsed, child, child.getBody());
         });
-      }
-    },
-
-    // Runs sprite defined behaviours until one returns false or
-    // there's no more
-    runBehaviours: function (dt, sprite, body) {
-      if (!sprite.behaviours) {
-        return;
-      }
-      var toRemove = [];
-      for (var i = sprite.behaviours.length - 1; i >= 0; i--) {
-        var behaviour = sprite.behaviours[i];
-        var ret = behaviour.update(dt, sprite, body);
-        if (ret === 'detach') {
-          toRemove.push(behaviour);
-        }
-        if (!ret) {
-          break;
-        }
-      }
-      for (var j = 0; j < toRemove.length; j++) {
-        this.removeBehaviourInstance(sprite, toRemove[j]);
       }
     },
 
     applyAIToBody: function (dt, body) {
       if (body && body.userData) {
-        this.runBehaviours(dt, body.userData, body);
+        behaviourHandler.runBehaviours(dt, body.userData, body);
       }
     },
 

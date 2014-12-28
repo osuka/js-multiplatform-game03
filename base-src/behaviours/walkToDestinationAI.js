@@ -1,51 +1,45 @@
 (function () {
   'use strict';
 
-  var AStarModule = require('./external/astar.js');
+  var AStarModule = require('../external/astar');
+  var MovementActuator = require('./movementActuator');
+  var behaviourHandler = require('./behaviourHandler');
   var astar = AStarModule.astar;
   
   var WalkToDestinationAI = function () {
 
     var TINTING = 0;
     var TINTED = 1;
-    var self = this;
 
-    var posToGrid = function (pos) {
+    WalkToDestinationAI.prototype.posToGrid = function (pos) {
       return cc.p(
-        pos.x / self.mapGraph.granularity.x,
-        pos.y / self.mapGraph.granularity.y
+        pos.x / this.mapGraph.granularity.x,
+        pos.y / this.mapGraph.granularity.y
       );
     };
 
-    var bodyPosToGrid = function (body) {
-      return posToGrid(body.getPos());
+    WalkToDestinationAI.prototype.bodyPosToGrid = function (body) {
+      return this.posToGrid(body.getPos());
     };
 
-    var updateConstraintToGridXY = function (sprite, pos) {
-      var space = sprite.getBody().space;
-      self.targetPos = cp.v(
-        pos.x * self.mapGraph.granularity.x + self.mapGraph.granularity.x / 2,
-        pos.y * self.mapGraph.granularity.y + self.mapGraph.granularity.y / 2
-      );
-      var fun = function () {
-        if (self.targetConstraint) {
-          space.removeConstraint(self.targetConstraint);
-        }
-        // http://chipmunk-physics.net/forum/viewtopic.php?f=1&t=1705
-        self.targetConstraint = new cp.PivotJoint(
-          sprite.getBody(),
-          space.staticBody,
-          cp.v(0, 0),
-          self.targetPos
-        );
-        self.targetConstraint.maxForce = 10000;
-        space.addConstraint(self.targetConstraint);
-      };
-      if (space.isLocked()) {
-        space.addPostStepCallback(fun);
-      } else {
-        fun();
+    WalkToDestinationAI.prototype.getMovementActuator = function (sprite) {
+      var m = behaviourHandler.findBehaviour(sprite, MovementActuator);
+      if (!m) {
+        m = behaviourHandler.addBehaviour(sprite, MovementActuator);
+        m.init();
       }
+      return m;
+    };
+
+    WalkToDestinationAI.prototype.setTargetGridPosition =
+    function (sprite, gridPos) {
+      var pos = cp.v(
+        gridPos.x * this.mapGraph.granularity.x +
+          this.mapGraph.granularity.x / 2,
+        gridPos.y * this.mapGraph.granularity.y +
+          this.mapGraph.granularity.y / 2
+      );
+      this.getMovementActuator(sprite).setTargetPosition(sprite, pos);
     };
 
     WalkToDestinationAI.prototype.name = 'WalkToDestinationAI';
@@ -66,8 +60,8 @@
       sprite.runAction(this.tintedAction);
 
       // calculate path
-      var xy0 = bodyPosToGrid(sprite.getBody());
-      var xy1 = posToGrid(destination);
+      var xy0 = this.bodyPosToGrid(sprite.getBody());
+      var xy1 = this.posToGrid(destination);
       this.path = astar.search(
         this.mapGraph.graph,
         this.mapGraph.graph.grid[Math.floor(xy0.x)][Math.floor(xy0.y)],
@@ -79,7 +73,7 @@
 
       // create a 'target constraint'
       if (this.path.length) {
-        updateConstraintToGridXY(sprite, this.path[this.pathPos]);
+        this.setTargetGridPosition(sprite, this.path[this.pathPos]);
       }
     };
 
@@ -97,25 +91,21 @@
 
     };
 
-    WalkToDestinationAI.prototype.update = function (dt, sprite, body) {
-
-      body.setAngVel(0);
-      body.setAngle(0);
+    WalkToDestinationAI.prototype.update = function (dt, sprite) {
 
       if (!this.path.length || this.pathPos >= this.path.length) {
         // end this AI
         return 'detach';
       }
 
-      var dist = cp.v.dist(sprite.getBody().getPos(), this.targetPos);
-      if (dist < 2) {
+      if (this.getMovementActuator(sprite).isAtTargetPosition(sprite)) {
         this.pathPos += 1;
         if (this.pathPos < this.path.length) {
-          updateConstraintToGridXY(sprite, this.path[this.pathPos]);
+          this.setTargetGridPosition(sprite, this.path[this.pathPos]);
         }
       }
 
-      return false;
+      return true;
 
     };
 
