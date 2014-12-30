@@ -99,6 +99,10 @@ updated whenever a call to setTargetPosition is made.
             self.targetPos
           );
           self.targetConstraint.maxForce = 10000;
+          // "The rate at which joint error is corrected
+          // Defaults to pow(1 - 0.1, 60) meaning that it will
+          // correct 10% of the error every 1/60th of a second."
+          self.errorBias = Math.pow(1 - 0.4, 60);
           space.addConstraint(self.targetConstraint);
         }
         self.targetConstraint.anchr2 = self.targetPos;

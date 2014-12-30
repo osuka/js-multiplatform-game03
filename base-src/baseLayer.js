@@ -38,6 +38,10 @@
       //
       this.space = new cp.Space();
       this.space.iterations = 5;
+
+      // Damping rate expressed as the fraction of velocity bodies retain
+      // each second.
+      this.space.damping = 1 / 8;
       this.space.gravity = cp.v(0, 0); // top view
 
       var layer = cc.Layer.create();

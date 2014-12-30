@@ -43,7 +43,7 @@
         var spriteHeight = sprite.getContentSize().height;
   
         // Physical body
-        var mass = params.mass || 5;
+        var mass = params.mass || 15;
         var moment = cp.momentForBox(mass, spriteWidth, spriteHeight);
         var body = new cp.Body(mass, moment);
         body.setPos(params.pos);
@@ -54,7 +54,7 @@
         // Contact shape for the body
         var shape = new cp.BoxShape(body, spriteWidth, spriteHeight);
         params.space.addShape(shape);
-        shape.setElasticity(params.elasticity || 0.2);
+        shape.setElasticity(params.elasticity || 0.1);
         shape.setFriction(params.friction || 0.8);
   
         // Link sprite with body and shape
