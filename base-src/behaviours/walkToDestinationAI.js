@@ -65,8 +65,8 @@
       this.path = astar.search(
         this.mapGraph.graph,
         this.mapGraph.graph.grid[Math.floor(xy0.x)][Math.floor(xy0.y)],
-        this.mapGraph.graph.grid[Math.floor(xy1.x)][Math.floor(xy1.y)] /*end*/,
-        { heuristic: astar.heuristics.diagonal }
+        this.mapGraph.graph.grid[Math.floor(xy1.x)][Math.floor(xy1.y)] /*end*/
+        //,{ heuristic: astar.heuristics.diagonal }
       );
       cc.log(this.path);
       this.pathPos = 0;

@@ -494,8 +494,8 @@
         }
       });
 
-      this._mapGraph.graph = new Graph(this._mapGraph.cache,
-        { diagonal: true });
+      this._mapGraph.graph = new Graph(this._mapGraph.cache/*,
+        { diagonal: true }*/);
       // this.drawMapGraphOverlay();
     },
 
@@ -758,22 +758,35 @@
       this.addChild(this.titleLabel);
     },
 
-    fire1: function () {
-      // this.toggleDebug();
+    zoomTo: function (newScale) {
       var gameArea = this._getGameArea();
-      var newScale = Math.max(gameArea.getScale() / 2, 0.25);
+      var time = 0.5;
       gameArea.runAction(
-        cc.ScaleTo.create(0.5, newScale)
+        cc.ScaleTo.create(time, newScale)
       );
+      // var center = gameArea.getPosition();
+      // var dest = cc.p(
+      //   center.x - (this.worldSize.width * newScale) / 2 -
+      //              (this.worldSize.width * newScale) / 2,  // anchor (0, 0)
+      //   center.y - (this.worldSize.width * newScale) / 2 -
+      //              (this.worldSize.height * newScale) / 2);
+      // this.ensureGameAreaPositionWithinBoundaries(dest);
+      // gameArea.runAction(
+      //   cc.MoveTo.create(time, dest)
+      // );
+      // cc.log('Origin: ' + center.x + ',' + center.y + ' • ' +
+      //        'Dest: ' + dest.x + ',' + dest.y + ' • ' +
+      //        'Scale: ' + newScale + ' • ' +
+      //        'Anchor: ' + gameArea.getAnchorPoint().x + ',' +
+      //                     gameArea.getAnchorPoint().y);
+    },
+
+    fire1: function () {
+      this.zoomTo(Math.max(this._getGameArea().getScale() / 2, 0.25));
     },
 
     fire2: function () {
-      // this.toggleDebug();
-      var gameArea = this._getGameArea();
-      var newScale = Math.min(gameArea.getScale() * 2, 2);
-      gameArea.runAction(
-        cc.ScaleTo.create(0.5, newScale)
-      );
+      this.zoomTo(Math.max(this._getGameArea().getScale() * 2, 2));
     },
 
     findFingerObject: function (touch) {
