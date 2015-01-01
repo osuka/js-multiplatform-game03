@@ -276,12 +276,9 @@ public:
      */
     void end();
     
-#if CC_ENABLE_SCRIPT_BINDING
-    /** restart the execution
-     * @lua endToLua
+    /** Restart the director
      */
     void restart();
-#endif
     
     /** Pauses the running scene.
      The running scene will be _drawed_ but all scheduled timers will be paused
@@ -403,10 +400,8 @@ protected:
     void purgeDirector();
     bool _purgeDirectorInNextLoop; // this flag will be set to true in end()
     
-#if CC_ENABLE_SCRIPT_BINDING
     void restartDirector();
     bool _restartDirectorInNextLoop; // this flag will be set to true in restart()
-#endif
     
     void setNextScene();
     

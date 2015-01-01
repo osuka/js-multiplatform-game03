@@ -731,7 +731,6 @@ cc.Director = cc.Class.extend(/** @lends cc.Director# */{
      * @param {Number} level
      */
     popToSceneStackLevel: function (level) {
-
         cc.assert(this._runningScene, cc._LogInfos.Director_popToSceneStackLevel_2);
 
         var locScenesStack = this._scenesStack;
@@ -971,9 +970,10 @@ if (cc._renderType === cc._RENDER_TYPE_CANVAS) {
 
     _p._clear = function () {
         var viewport = this._openGLView.getViewPortRect();
-        cc._renderContext.clearRect(-viewport.x, viewport.y, viewport.width, -viewport.height);
+        var context = cc._renderContext.getContext();
+        context.setTransform(1,0,0,1, 0, 0);
+        context.clearRect(-viewport.x, viewport.y, viewport.width, viewport.height);
     };
-
 
     _p._createStatsLabel = function () {
         var _t = this;
@@ -1016,7 +1016,4 @@ if (cc._renderType === cc._RENDER_TYPE_CANVAS) {
     if (cc._fpsImage) {
         cc.Director._fpsImage.src = cc._fpsImage;
     }
-    cc.assert(cc.isFunction(cc._tmp.DirectorWebGL), cc._LogInfos.MissingFile, "CCDirectorWebGL.js");
-    cc._tmp.DirectorWebGL();
-    delete cc._tmp.DirectorWebGL;
 }

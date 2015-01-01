@@ -126,6 +126,7 @@ cc.Node.RenderCmd.prototype = {
                if (item && item._renderCmd)
                    item._renderCmd._updateDisplayColor(whiteColor);
            }
+           this._cascadeColorEnabledDirty = false;
        } else {
            if (parentColor === undefined) {
                var locParent = node._parent;
@@ -148,7 +149,6 @@ cc.Node.RenderCmd.prototype = {
                }
            }
        }
-       this._cascadeColorEnabledDirty = false;
        this._dirtyFlag = this._dirtyFlag & cc.Node._dirtyFlags.colorDirty ^ this._dirtyFlag;
    },
 
@@ -163,6 +163,7 @@ cc.Node.RenderCmd.prototype = {
                 if (item && item._renderCmd)
                     item._renderCmd._updateDisplayOpacity(255);
             }
+            this._cascadeOpacityEnabledDirty = false;
         } else {
             if (parentOpacity === undefined) {
                 var locParent = node._parent;
@@ -182,7 +183,6 @@ cc.Node.RenderCmd.prototype = {
                 }
             }
         }
-        this._cascadeOpacityEnabledDirty = false;
         this._dirtyFlag = this._dirtyFlag & cc.Node._dirtyFlags.opacityDirty ^ this._dirtyFlag;
     },
 
@@ -324,7 +324,7 @@ cc.Node.RenderCmd.prototype = {
             // skew
             if (node._skewX || node._skewY) {
                 // offset the anchorpoint
-                var skx = Math.tan(-node._skewX * Math.PI / 180);                            //TODO
+                var skx = Math.tan(-node._skewX * Math.PI / 180);
                 var sky = Math.tan(-node._skewY * Math.PI / 180);
                 if (skx === Infinity)
                     skx = 99999999;
@@ -367,7 +367,7 @@ cc.Node.RenderCmd.prototype = {
     };
 
     proto.visit = function (parentCmd) {
-        var _t = this, node = this._node;
+        var node = this._node;
         // quick return if not visible
         if (!node._visible)
             return;
@@ -378,7 +378,7 @@ cc.Node.RenderCmd.prototype = {
 
         //visit for canvas
         var i, children = node._children, child;
-        _t._syncStatus(parentCmd);
+        this._syncStatus(parentCmd);
         var len = children.length;
         if (len > 0) {
             node.sortAllChildren();
@@ -396,7 +396,7 @@ cc.Node.RenderCmd.prototype = {
         } else {
             cc.renderer.pushRenderCommand(this);
         }
-        _t._dirtyFlag = 0;
+        this._dirtyFlag = 0;
     };
 
     proto._syncStatus = function (parentCmd) {

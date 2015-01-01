@@ -32,7 +32,7 @@
         var locCacheCanvas = this._cacheCanvas = cc.newElement('canvas');
         locCacheCanvas.width = 1;
         locCacheCanvas.height = 1;
-        this._cacheContext = locCacheCanvas.getContext("2d");
+        this._cacheContext = new cc.CanvasContextWrapper(locCacheCanvas.getContext("2d"));
         var locTexture = this._cacheTexture = new cc.Texture2D();
         locTexture.initWithElement(locCacheCanvas);
         locTexture.handleLoadedTexture();
@@ -71,6 +71,22 @@
         cc.Node.CanvasRenderCmd.prototype.visit.call(this, parentCmd);
     };
 
+    proto._updateDisplayColor = function(parentColor){
+        cc.Node.CanvasRenderCmd.prototype._updateDisplayColor.call(this, parentColor);
+
+        var scale9Image = this._node._scale9Image;
+        if(scale9Image){
+            var scaleChildren = scale9Image.getChildren();
+            for (var i = 0; i < scaleChildren.length; i++) {
+                var selChild = scaleChildren[i];
+                if (selChild)
+                    selChild._renderCmd._updateDisplayColor(parentColor);
+            }
+            this._cacheScale9Sprite();
+        }
+
+    };
+
     proto.transform = function(parentCmd){
         var node = this._node;
         this._cacheScale9Sprite();
@@ -91,13 +107,12 @@
         var size = node._contentSize;
         var sizeInPixels = cc.size(size.width * locScaleFactor, size.height * locScaleFactor);
 
-        var locCanvas = this._cacheCanvas;
+        var locCanvas = this._cacheCanvas, wrapper = this._cacheContext, context = wrapper.getContext();
 
         var contentSizeChanged = false;
         if(locCanvas.width != sizeInPixels.width || locCanvas.height != sizeInPixels.height){
             locCanvas.width = sizeInPixels.width;
             locCanvas.height = sizeInPixels.height;
-            this._cacheContext.translate(0, sizeInPixels.height);
             contentSizeChanged = true;
         }
 
@@ -106,8 +121,9 @@
         node._scale9Image.visit();
 
         //draw to cache canvas
-        this._cacheContext.clearRect(0, 0, sizeInPixels.width, -sizeInPixels.height);
-        cc.renderer._renderingToCacheCanvas(this._cacheContext, node.__instanceId, locScaleFactor, locScaleFactor);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        context.clearRect(0, 0, sizeInPixels.width, sizeInPixels.height);
+        cc.renderer._renderingToCacheCanvas(wrapper, node.__instanceId, locScaleFactor, locScaleFactor);
 
         if(contentSizeChanged)
             this._cacheSprite.setTextureRect(cc.rect(0,0, size.width, size.height));

@@ -88,16 +88,15 @@ public:
 	virtual const cocos2d::BlendFunc& getBlendFunc () const;
 	virtual void setOpacityModifyRGB (bool value);
 	virtual bool isOpacityModifyRGB () const;
-
-CC_CONSTRUCTOR_ACCESS:
+    
+protected:
 	SkeletonRenderer ();
 	SkeletonRenderer (spSkeletonData* skeletonData, bool ownsSkeletonData = false);
 	SkeletonRenderer (const std::string& skeletonDataFile, spAtlas* atlas, float scale = 1);
 	SkeletonRenderer (const std::string& skeletonDataFile, const std::string& atlasFile, float scale = 1);
 	virtual ~SkeletonRenderer ();
 	void initialize ();
-
-protected:
+    
 	void setSkeletonData (spSkeletonData* skeletonData, bool ownsSkeletonData);
 	virtual cocos2d::Texture2D* getTexture (spRegionAttachment* attachment) const;
 	virtual cocos2d::Texture2D* getTexture (spMeshAttachment* attachment) const;

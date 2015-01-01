@@ -26,23 +26,37 @@
     sp.Skeleton.CanvasRenderCmd = function(renderableObject){
         cc.Node.CanvasRenderCmd.call(this, renderableObject);
         this._needDraw = true;
+
+        this._skeletonSprites = [];
     };
 
     var proto = sp.Skeleton.CanvasRenderCmd.prototype = Object.create(cc.Node.CanvasRenderCmd.prototype);
     proto.constructor = sp.Skeleton.CanvasRenderCmd;
 
-    proto.rendering = function (ctx, scaleX, scaleY) {
-        var node = this._node;
-        ctx = ctx || cc._renderContext;
+    proto.rendering = function (wrapper, scaleX, scaleY) {
+        var node = this._node, i, n, sprites = this._skeletonSprites, selSpriteCmd;
+        wrapper = wrapper || cc._renderContext;
 
-        if (!node._debugSlots && !node._debugBones) {
-            return;
+        //draw skeleton sprite by it self
+        wrapper.save();
+        //set to armature mode (spine need same way to draw)
+        wrapper._switchToArmatureMode(true, this._worldTransform, scaleX, scaleY);
+        for(i = 0, n = sprites.length; i < n; i++){
+            selSpriteCmd = sprites[i]._renderCmd;
+            if(selSpriteCmd && selSpriteCmd.rendering){
+                selSpriteCmd.rendering(wrapper, scaleX, scaleY);
+                selSpriteCmd._dirtyFlag = 0;
+            }
         }
-        var t = this._worldTransform;
-        ctx.save();
-        ctx.transform(t.a, t.c, t.b, t.d, t.tx * scaleX, -t.ty * scaleY);
+        wrapper._switchToArmatureMode(false);
+        wrapper.restore();
+
+        if (!node._debugSlots && !node._debugBones)
+            return;
+
+        wrapper.setTransform(this._worldTransform, scaleX, scaleY);
         var locSkeleton = node._skeleton;
-        var attachment, slot, i, n, drawingUtil = cc._drawingUtil;
+        var attachment, slot, drawingUtil = cc._drawingUtil;
         if (node._debugSlots) {
             // Slots.
             drawingUtil.setDrawColor(0, 0, 255, 255);
@@ -85,7 +99,6 @@
                     drawingUtil.setDrawColor(0, 255, 0, 255);
             }
         }
-        ctx.restore();
     };
 
     proto._createChildFormSkeletonData = function(){
@@ -99,7 +112,7 @@
             rendererObject = attachment.rendererObject;
             rect = cc.rect(rendererObject.x, rendererObject.y, rendererObject.width,rendererObject.height);
             var sprite = new cc.Sprite(rendererObject.page._texture, rect, rendererObject.rotate);
-            node.addChild(sprite,-1);
+            this._skeletonSprites.push(sprite);
             slot.currentSprite = sprite;
         }
     };
@@ -121,7 +134,7 @@
                 var rendererObject = attachment.rendererObject;
                 var rect = cc.rect(rendererObject.x, rendererObject.y, rendererObject.width,rendererObject.height);
                 var sprite = new cc.Sprite(rendererObject.page._texture, rect, rendererObject.rotate);
-                node.addChild(sprite,-1);
+                this._skeletonSprites.push(sprite);
                 slot.currentSprite = sprite;
             }
             selSprite.setVisible(true);

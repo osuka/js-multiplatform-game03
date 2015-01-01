@@ -75,16 +75,14 @@ public:
 	virtual void onTrackEntryEvent (int trackIndex, spEventType type, spEvent* event, int loopCount);
 
 	spAnimationState* getState() const;
-
-CC_CONSTRUCTOR_ACCESS:
+    
+protected:
+    SkeletonAnimation ();
 	SkeletonAnimation (spSkeletonData* skeletonData);
 	SkeletonAnimation (const std::string&skeletonDataFile, spAtlas* atlas, float scale = 1);
 	SkeletonAnimation (const std::string& skeletonDataFile, const std::string& atlasFile, float scale = 1);
 	virtual ~SkeletonAnimation ();
 	void initialize ();
-
-protected:
-    SkeletonAnimation ();
     
 	spAnimationState* _state;
 

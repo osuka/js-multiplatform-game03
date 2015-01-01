@@ -11,7 +11,7 @@ I'm using:
 
 * npm, browserify for dependency management
 * grunt for building
-* cocos2d-x (3.3-rc0) and cocos2d-js (3.1) as the game engine
+* cocos2d-x (3.3) and cocos2d-js (3.2) as the game engine
 * chipmunk as the physics engine
 * Inkscape for graphics
 
