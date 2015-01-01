@@ -58,10 +58,11 @@ THE SOFTWARE.
 #include "base/CCAutoreleasePool.h"
 #include "base/CCConfiguration.h"
 #include "platform/CCApplication.h"
+//#include "platform/CCGLViewImpl.h"
+
 #if CC_ENABLE_SCRIPT_BINDING
 #include "CCScriptSupport.h"
 #endif
-//#include "platform/CCGLViewImpl.h"
 
 /**
  Position of the FPS
@@ -128,10 +129,10 @@ bool Director::init(void)
 
     // purge ?
     _purgeDirectorInNextLoop = false;
-#if CC_ENABLE_SCRIPT_BINDING
+    
     // restart ?
     _restartDirectorInNextLoop = false;
-#endif
+    
     _winSizeInPoints = Size::ZERO;
 
     _openGLView = nullptr;
@@ -933,7 +934,6 @@ void Director::end()
     _purgeDirectorInNextLoop = true;
 }
 
-#if CC_ENABLE_SCRIPT_BINDING
 void Director::restart()
 {
     _restartDirectorInNextLoop = true;
@@ -942,7 +942,7 @@ void Director::restart()
 void Director::restartDirector()
 {
     // cleanup scheduler
-    //getScheduler()->unscheduleAll();
+    getScheduler()->unscheduleAll();
     // Disable event dispatching
     if (_eventDispatcher)
     {
@@ -980,7 +980,9 @@ void Director::restartDirector()
     SpriteFrameCache::destroyInstance();
     GLProgramCache::destroyInstance();
     GLProgramStateCache::destroyInstance();
-    FileUtils::destroyInstance();
+    std::vector<std::string> searchPaths;
+    FileUtils::getInstance()->setSearchPaths(searchPaths);
+    FileUtils::getInstance()->purgeCachedEntries();
 
     // cocos2d-x specific data structures
     UserDefault::destroyInstance();
@@ -990,13 +992,6 @@ void Director::restartDirector()
     //destroyTextureCache();
     _textureCache->removeAllTextures();
 
-    // OpenGL view
-    // if (_openGLView)
-    // {
-    //     _openGLView->release();
-    //     _openGLView = nullptr;
-    // }
-
     // Disable event dispatching
     if (_eventDispatcher)
     {
@@ -1005,11 +1000,12 @@ void Director::restartDirector()
 
     // release the objects
     PoolManager::getInstance()->getCurrentPool()->clear();
-
+    
+#if CC_ENABLE_SCRIPT_BINDING
     ScriptEvent scriptEvent(kRestartGame, NULL);
     ScriptEngineManager::getInstance()->getScriptEngine()->sendEvent(&scriptEvent);
-}
 #endif
+}
 
 void Director::purgeDirector()
 {
@@ -1375,13 +1371,11 @@ void DisplayLinkDirector::mainLoop()
         _purgeDirectorInNextLoop = false;
         purgeDirector();
     }
-#if CC_ENABLE_SCRIPT_BINDING
     else if (_restartDirectorInNextLoop)
     {
         _restartDirectorInNextLoop = false;
         restartDirector();
     }
-#endif
     else if (! _invalid)
     {
         drawScene();

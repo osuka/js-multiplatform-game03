@@ -81,21 +81,31 @@
         if(this._cacheDirty){
             var node = this._node;
             var children = node._children, locBakeSprite = this._bakeSprite;
+
             //compute the bounding box of the bake layer.
             this.transform(this.getParentRenderCmd(), true);
+
             var boundingBox = this._getBoundingBoxForBake();
             boundingBox.width = 0|(boundingBox.width+0.5);
             boundingBox.height = 0|(boundingBox.height+0.5);
-            var bakeContext = locBakeSprite.getCacheContext();
-            locBakeSprite.resetCanvasSize(boundingBox.width, boundingBox.height);
-            bakeContext.translate(0 - boundingBox.x, boundingBox.height + boundingBox.y);
-            //  invert
-            var t = cc.affineTransformInvert(this._worldTransform);
-            bakeContext.transform(t.a, t.c, t.b, t.d, t.tx , -t.ty );
 
-            //reset the bake sprite's position
-            var anchor = locBakeSprite.getAnchorPointInPoints();
-            locBakeSprite.setPosition(anchor.x + boundingBox.x, anchor.y + boundingBox.y);
+            var bakeContext = locBakeSprite.getCacheContext();
+            var ctx = bakeContext.getContext();
+            locBakeSprite.resetCanvasSize(boundingBox.width, boundingBox.height);
+
+            var anchor = locBakeSprite.getAnchorPointInPoints(), locPos = node._position;
+            if(node._ignoreAnchorPointForPosition){
+                //bakeContext.translate(0 - boundingBox.x + locPos.x, boundingBox.height + boundingBox.y - locPos.y);
+                bakeContext.setOffset(0 - boundingBox.x, ctx.canvas.height - boundingBox.height + boundingBox.y );
+                //reset the bake sprite's position
+                locBakeSprite.setPosition(anchor.x + boundingBox.x - locPos.x, anchor.y + boundingBox.y - locPos.y);
+            } else {
+                var selfAnchor = this.getAnchorPointInPoints();
+                var selfPos = {x: locPos.x - selfAnchor.x, y: locPos.y - selfAnchor.y};
+                //bakeContext.translate(0 - boundingBox.x + selfPos.x, boundingBox.height + boundingBox.y - selfPos.y);
+                bakeContext.setOffset(0 - boundingBox.x, ctx.canvas.height - boundingBox.height + boundingBox.y);
+                locBakeSprite.setPosition(anchor.x + boundingBox.x - selfPos.x, anchor.y + boundingBox.y - selfPos.y);
+            }
 
             //visit for canvas
             node.sortAllChildren();
@@ -104,7 +114,7 @@
                 children[i].visit(this);
             }
             cc.renderer._renderingToCacheCanvas(bakeContext, this.__instanceId);
-            locBakeSprite.transform();                   //because bake sprite's position was changed at rendering.
+            locBakeSprite.transform(this);                   //because bake sprite's position was changed at rendering.
             this._cacheDirty = false;
         }
     };
@@ -141,17 +151,18 @@
         //query child's BoundingBox
         if (!node._children || node._children.length === 0)
             return cc.rect(0, 0, 10, 10);
+        var trans = node.getNodeToWorldTransform();
 
         var locChildren = node._children;
-        for (var i = 0; i < locChildren.length; i++) {
+        for (var i = 0, len = locChildren.length; i < len; i++) {
             var child = locChildren[i];
             if (child && child._visible) {
                 if(rect){
-                    var childRect = child._getBoundingBoxToCurrentNode();
+                    var childRect = child._getBoundingBoxToCurrentNode(trans);
                     if (childRect)
                         rect = cc.rectUnion(rect, childRect);
                 }else{
-                    rect = child._getBoundingBoxToCurrentNode();
+                    rect = child._getBoundingBoxToCurrentNode(trans);
                 }
             }
         }
@@ -179,9 +190,8 @@
     };
 
     proto.rendering = function (ctx, scaleX, scaleY) {
-        var context = ctx || cc._renderContext,
+        var wrapper = ctx || cc._renderContext, context = wrapper.getContext(),
             node = this._node,
-            t = this._worldTransform,
             curColor = this._displayedColor,
             opacity = this._displayedOpacity / 255,
             locWidth = node._contentSize.width,
@@ -190,24 +200,14 @@
         if (opacity === 0)
             return;
 
-        var needTransform = (t.a !== 1 || t.b !== 0 || t.c !== 0 || t.d !== 1);
-        var needRestore = (this._blendFuncStr !== "source-over") || needTransform;
+        wrapper.setCompositeOperation(this._blendFuncStr);
+        wrapper.setGlobalAlpha(opacity);
+        wrapper.setFillStyle("rgba(" + (0 | curColor.r) + "," + (0 | curColor.g) + ","
+            + (0 | curColor.b) + ", 1)");  //TODO: need cache the color string
 
-        if (needRestore) {
-            context.save();
-            context.globalCompositeOperation = this._blendFuncStr;
-        }
-        context.globalAlpha = opacity;
-        context.fillStyle = "rgba(" + (0 | curColor.r) + "," + (0 | curColor.g) + ","
-            + (0 | curColor.b) + ", 1)";
-        if (needTransform) {
-            context.transform(t.a, t.c, t.b, t.d, t.tx * scaleX, -t.ty * scaleY);
-            context.fillRect(0, 0, locWidth * scaleX, -locHeight * scaleY);
-        } else {
-            context.fillRect(t.tx * scaleX, -t.ty * scaleY, locWidth * scaleX, -locHeight * scaleY);
-        }
-        if (needRestore)
-            context.restore();
+        wrapper.setTransform(this._worldTransform, scaleX, scaleY);
+        context.fillRect(0, 0, locWidth * scaleX, -locHeight * scaleY);
+
         cc.g_NumberOfDraws++;
     };
 
@@ -229,24 +229,25 @@
             this.transform(this.getParentRenderCmd(), true);
             //compute the bounding box of the bake layer.
             var boundingBox = this._getBoundingBoxForBake();
-            boundingBox.width = 0 | boundingBox.width;
-            boundingBox.height = 0 | boundingBox.height;
+            boundingBox.width = 0|(boundingBox.width+0.5);
+            boundingBox.height = 0|(boundingBox.height+0.5);
+
             var bakeContext = locBakeSprite.getCacheContext();
+            var ctx = bakeContext.getContext();
             locBakeSprite.resetCanvasSize(boundingBox.width, boundingBox.height);
             var anchor = locBakeSprite.getAnchorPointInPoints(), locPos = node._position;
             if(node._ignoreAnchorPointForPosition){
-                bakeContext.translate(0 - boundingBox.x + locPos.x, boundingBox.height + boundingBox.y - locPos.y);
+                //bakeContext.translate(0 - boundingBox.x + locPos.x, boundingBox.height + boundingBox.y - locPos.y);
+                bakeContext.setOffset(0 - boundingBox.x, ctx.canvas.height - boundingBox.height + boundingBox.y );
                 //reset the bake sprite's position
                 locBakeSprite.setPosition(anchor.x + boundingBox.x - locPos.x, anchor.y + boundingBox.y - locPos.y);
             } else {
                 var selfAnchor = this.getAnchorPointInPoints();
                 var selfPos = {x: locPos.x - selfAnchor.x, y: locPos.y - selfAnchor.y};
-                bakeContext.translate(0 - boundingBox.x + selfPos.x, boundingBox.height + boundingBox.y - selfPos.y);
+                //bakeContext.translate(0 - boundingBox.x + selfPos.x, boundingBox.height + boundingBox.y - selfPos.y);
+                bakeContext.setOffset(0 - boundingBox.x, ctx.canvas.height - boundingBox.height + boundingBox.y);
                 locBakeSprite.setPosition(anchor.x + boundingBox.x - selfPos.x, anchor.y + boundingBox.y - selfPos.y);
             }
-            //  invert
-            var t = cc.affineTransformInvert(this._worldTransform);
-            bakeContext.transform(t.a, t.c, t.b, t.d, t.tx, -t.ty);
 
             var child;
             cc.renderer._turnToCacheMode(this.__instanceId);
@@ -359,37 +360,23 @@
     proto.constructor = cc.LayerGradient.CanvasRenderCmd;
 
     proto.rendering = function (ctx, scaleX, scaleY) {
-        var context = ctx || cc._renderContext,
-            self = this,
-            node = self._node,
-            opacity = this._displayedOpacity / 255,
-            t = this._worldTransform;
+        var wrapper = ctx || cc._renderContext, context = wrapper.getContext(),
+            node = this._node,
+            opacity = this._displayedOpacity / 255;
 
         if (opacity === 0)
             return;
 
-        var needTransform = (t.a !== 1 || t.b !== 0 || t.c !== 0 || t.d !== 1);
-        var needRestore = (this._blendFuncStr !== "source-over") || needTransform;
-        if (needRestore) {
-            context.save();
-            context.globalCompositeOperation = this._blendFuncStr;
-        }
-        context.globalAlpha = opacity;
         var locWidth = node._contentSize.width, locHeight = node._contentSize.height;
-
-        var gradient = context.createLinearGradient(self._startPoint.x, self._startPoint.y, self._endPoint.x, self._endPoint.y);
+        wrapper.setCompositeOperation(this._blendFuncStr);
+        wrapper.setGlobalAlpha(opacity);
+        var gradient = context.createLinearGradient(this._startPoint.x, this._startPoint.y, this._endPoint.x, this._endPoint.y);
         gradient.addColorStop(0, this._startStopStr);
         gradient.addColorStop(1, this._endStopStr);
-        context.fillStyle = gradient;
+        wrapper.setFillStyle(gradient);
 
-        if (needTransform) {
-            context.transform(t.a, t.c, t.b, t.d, t.tx * scaleX, -t.ty * scaleY);
-            context.fillRect(0, 0, locWidth * scaleX, -locHeight * scaleY);
-        } else
-            context.fillRect(t.tx * scaleX, -t.ty * scaleY, locWidth * scaleX, -locHeight * scaleY);
-
-        if (needRestore)
-            context.restore();
+        wrapper.setTransform(this._worldTransform, scaleX, scaleY);
+        context.fillRect(0, 0, locWidth * scaleX, -locHeight * scaleY);
         cc.g_NumberOfDraws++;
     };
 

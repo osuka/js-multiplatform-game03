@@ -39,6 +39,7 @@
                     if (item && item._renderCmd)
                         item._renderCmd._updateDisplayColor(whiteColor);
                 }
+                this._cascadeColorEnabledDirty = false;
             } else {
                 if (parentColor === undefined) {
                     var locParent = node._parent;
@@ -69,7 +70,6 @@
                     }
                 }
             }
-            this._cascadeColorEnabledDirty = false;
             this._dirtyFlag = this._dirtyFlag & cc.Node._dirtyFlags.colorDirty ^ this._dirtyFlag;
         },
 
@@ -84,6 +84,7 @@
                     if (item && item._renderCmd)
                         item._renderCmd._updateDisplayOpacity(255);
                 }
+                this._cascadeOpacityEnabledDirty = false;
             } else {
                 if (parentOpacity === undefined) {
                     var locParent = node._parent;
@@ -111,7 +112,6 @@
                     }
                 }
             }
-            this._cascadeOpacityEnabledDirty = false;
             this._dirtyFlag = this._dirtyFlag & cc.Node._dirtyFlags.opacityDirty ^ this._dirtyFlag;
         }
     };
@@ -143,11 +143,12 @@
         var childLen = locChildren.length, pLen = locProtectedChildren.length;
 
         this._syncStatus(parentCmd);
-        this._dirtyFlag = 0;
 
         node.sortAllChildren();
         node.sortAllProtectedChildren();
 
+
+        var pChild;
         // draw children zOrder < 0
         for (i = 0; i < childLen; i++) {
             child = children[i];
@@ -157,9 +158,11 @@
                 break;
         }
         for (j = 0; j < pLen; j++) {
-            child = locProtectedChildren[j];
-            if (child._localZOrder < 0)
-                child.visit(this);
+            pChild = locProtectedChildren[j];
+            if (pChild && pChild._localZOrder < 0){
+                this._changeProtectedChild(pChild);
+                pChild.visit(this);
+            }
             else
                 break;
         }
@@ -167,11 +170,38 @@
         cc.renderer.pushRenderCommand(this);
 
         for (; i < childLen; i++)
-            children[i] && children[i]._renderCmd.visit(this);
-        for (; j < pLen; j++)
-            locProtectedChildren[j] && locProtectedChildren[j]._renderCmd.visit(this);
+            children[i] && children[i].visit(this);
+        for (; j < pLen; j++){
+            pChild = locProtectedChildren[j];
+            if(!pChild) continue;
+            this._changeProtectedChild(pChild);
+            pChild.visit(this);
+        }
 
+        this._dirtyFlag = 0;
         this._cacheDirty = false;
+    };
+
+    proto._changeProtectedChild = function(child){
+        var cmd = child._renderCmd,
+            dirty = cmd._dirtyFlag,
+            flags = cc.Node._dirtyFlags;
+
+        if(this._dirtyFlag & flags.colorDirty)
+            dirty |= flags.colorDirty;
+
+        if(this._dirtyFlag & flags.opacityDirty)
+            dirty |= flags.opacityDirty;
+
+        var colorDirty = dirty & flags.colorDirty,
+            opacityDirty = dirty & flags.opacityDirty;
+
+        if(colorDirty)
+            cmd._updateDisplayColor(this._displayedColor);
+        if(opacityDirty)
+            cmd._updateDisplayOpacity(this._displayedOpacity);
+        if(colorDirty || opacityDirty)
+            cmd._updateColor();
     };
 
     proto.transform = function(parentCmd, recursive){
