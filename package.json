@@ -2,7 +2,6 @@
   "name": "js-multiplatform-game",
   "version": "3.0.0",
   "dependencies": {
-    "javascript-astar": "~0.4.0"
   },
   "devDependencies": {
     "grunt": "~0.4.1",
