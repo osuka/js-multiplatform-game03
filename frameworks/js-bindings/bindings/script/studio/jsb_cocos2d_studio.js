@@ -30,11 +30,24 @@ var ccs = ccs || {};
 
 ccs.Class = ccs.Class || cc.Class || {};
 
-//movement event type
+// Movement event type
 ccs.MovementEventType = {
     start: 0,
     complete: 1,
     loopComplete: 2
+};
+
+// Inner action type
+ccs.InnerActionType = {
+    LoopAction: 0,
+    NoLoopAction: 1,
+    SingleFrame: 2
+};
+
+ccs.AnimationInfo = function (name, startIndex, endIndex) {
+    this.name = name || "";
+    this.startIndex = startIndex != undefined ? startIndex : 0;
+    this.endIndex = endIndex != undefined ? endIndex : 0;
 };
 
 // Armature
@@ -49,6 +62,9 @@ if(ccs.Armature){
   ccs.ComController.extend = cc.Class.extend;
   ccs.Armature.extend = cc.Class.extend;
 }
+
+ccs.Armature.prototype._setBlendFunc = ccs.Armature.prototype.setBlendFunc;
+ccs.Armature.prototype.setBlendFunc = templateSetBlendFunc;
 
 
 ccs.sendEvent = function (event) {
@@ -450,4 +466,99 @@ ccs.Bone.prototype.getColliderBodyList = function() {
         }
     }
     return [];
-}
+};
+
+ccs.TweenType = {
+    CUSTOM_EASING: -1,
+    LINEAR: 0,
+
+    SINE_EASEIN: 1,
+    SINE_EASEOUT: 2,
+    SINE_EASEINOUT: 3,
+
+    QUAD_EASEIN: 4,
+    QUAD_EASEOUT: 5,
+    QUAD_EASEINOUT: 6,
+
+    CUBIC_EASEIN: 7,
+    CUBIC_EASEOUT: 8,
+    CUBIC_EASEINOUT: 9,
+
+    QUART_EASEIN: 10,
+    QUART_EASEOUT: 11,
+    QUART_EASEINOUT: 12,
+
+    QUINT_EASEIN: 13,
+    QUINT_EASEOUT: 14,
+    QUINT_EASEINOUT: 15,
+
+    EXPO_EASEIN: 16,
+    EXPO_EASEOUT: 17,
+    EXPO_EASEINOUT: 18,
+
+    CIRC_EASEIN: 19,
+    CIRC_EASEOUT: 20,
+    CIRC_EASEINOUT: 21,
+
+    ELASTIC_EASEIN: 22,
+    ELASTIC_EASEOUT: 23,
+    ELASTIC_EASEINOUT: 24,
+
+    BACK_EASEIN: 25,
+    BACK_EASEOUT: 26,
+    BACK_EASEINOUT: 27,
+
+    BOUNCE_EASEIN: 28,
+    BOUNCE_EASEOUT: 29,
+    BOUNCE_EASEINOUT: 30,
+
+    TWEEN_EASING_MAX: 10000
+};
+
+ccs.FrameEaseType = {
+    CUSTOM : -1,
+
+    LINEAR : 0,
+
+    SINE_EASEIN : 1,
+    SINE_EASEOUT : 2,
+    SINE_EASEINOUT : 3,
+
+    QUAD_EASEIN : 4,
+    QUAD_EASEOUT : 5,
+    QUAD_EASEINOUT : 6,
+
+    CUBIC_EASEIN : 7,
+    CUBIC_EASEOUT : 8,
+    CUBIC_EASEINOUT : 9,
+
+    QUART_EASEIN : 10,
+    QUART_EASEOUT : 11,
+    QUART_EASEINOUT : 12,
+
+    QUINT_EASEIN : 13,
+    QUINT_EASEOUT : 14,
+    QUINT_EASEINOUT : 15,
+
+    EXPO_EASEIN : 16,
+    EXPO_EASEOUT : 17,
+    EXPO_EASEINOUT : 18,
+
+    CIRC_EASEIN : 19,
+    CIRC_EASEOUT : 20,
+    CIRC_EASEINOUT : 21,
+
+    ELASTIC_EASEIN : 22,
+    ELASTIC_EASEOUT : 23,
+    ELASTIC_EASEINOUT : 24,
+
+    BACK_EASEIN : 25,
+    BACK_EASEOUT : 26,
+    BACK_EASEINOUT : 27,
+
+    BOUNCE_EASEIN : 28,
+    BOUNCE_EASEOUT : 29,
+    BOUNCE_EASEINOUT : 30,
+
+    TWEEN_EASING_MAX: 1000
+};

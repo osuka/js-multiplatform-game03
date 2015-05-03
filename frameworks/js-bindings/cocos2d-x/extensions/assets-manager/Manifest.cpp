@@ -144,7 +144,7 @@ bool Manifest::versionEquals(const Manifest *b) const
             return false;
         
         // Check groups version
-        for (int i = 0; i < _groups.size(); ++i) {
+        for (unsigned int i = 0; i < _groups.size(); ++i) {
             std::string gid =_groups[i];
             // Check group name
             if (gid != bGroups[i])
@@ -234,7 +234,7 @@ void Manifest::genResumeAssetsList(Downloader::DownloadUnits *units) const
     }
 }
 
-std::vector<std::string> Manifest::getSearchPaths()
+std::vector<std::string> Manifest::getSearchPaths() const
 {
     std::vector<std::string> searchPaths;
     searchPaths.push_back(_manifestRoot);
