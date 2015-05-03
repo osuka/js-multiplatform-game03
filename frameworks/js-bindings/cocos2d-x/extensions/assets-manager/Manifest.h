@@ -97,7 +97,7 @@ public:
     
     /** @brief Get the search paths list related to the Manifest.
      */
-    std::vector<std::string> getSearchPaths();
+    std::vector<std::string> getSearchPaths() const;
     
 protected:
     
@@ -163,7 +163,9 @@ protected:
      */
     const std::string& getGroupVersion(const std::string &group) const;
     
-    /** @brief Gets assets.
+    /** 
+     * @brief Gets assets.
+     * @lua NA
      */
     const std::unordered_map<std::string, Asset>& getAssets() const;
     
