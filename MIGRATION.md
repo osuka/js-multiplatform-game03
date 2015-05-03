@@ -1,4 +1,15 @@
-# Notes on project migration
+# Notes on project migration from js-3.1/x-3.3 to 3.6
+
+* Download cocos2d-js and cocos2d-x from [cocos-2d-x main site](http://www.cocos2d-x.org/)
+* Run `setup.py` for both.
+* Created a skeleton game to copy from, using
+```
+cd ~/code
+cocos new -e ~/Documents/cocos/cocos2d-js-v3.6/ -p com.gatillos.js03 -l js -d . js-multiplatform-game03
+```
+* Replace the folders `frameworks` and `tools` in the git project with the ones with this newly generated project. Then remove the new project.
+
+# Notes on project migration from 2.x to js-3.1/x-3.3
 
 The following was used to create a new base project with cocos2d-js-v3.1 and cocos2d-x-3.3rc0 and migrate
 the old code to it
